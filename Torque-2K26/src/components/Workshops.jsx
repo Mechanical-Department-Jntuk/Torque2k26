@@ -8,41 +8,40 @@ const Workshops = () => {
   const WorkshopCard = ({ workshop }) => (
     <div className="workshop-card flex-shrink-0 w-[350px] mx-4">
       <div
-        className="neu-card overflow-hidden h-[400px] relative group cursor-pointer"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
+        className="workshop-card-inner overflow-hidden relative group cursor-pointer rounded-2xl"
+        style={{
+          minHeight: '380px',
+          backgroundImage: `url(${workshop.image})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
       >
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0">
-          <img
-            src={workshop.image}
-            alt={workshop.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30"></div>
-        </div>
+        {/* Dark Overlay */}
+        <div 
+          className="absolute inset-0 transition-opacity duration-300"
+          style={{
+            background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)'
+          }}
+        ></div>
 
         {/* Content */}
         <div className="relative h-full flex flex-col justify-end p-6 z-10">
-          <div className="transform transition-transform duration-300 group-hover:-translate-y-2">
-            <h3 className="text-3xl font-bold text-gold mb-2 flex items-center gap-2">
-              {workshop.name}
-              {workshop.emoji && <span className="text-2xl">{workshop.emoji}</span>}
-            </h3>
-            <p className="text-text/90 text-lg mb-4 italic">
-              {workshop.tagline}
-            </p>
+          <div className="flex items-end justify-between gap-4">
+            {/* Text Content - Bottom Left */}
+            <div className="flex-1">
+              <p className="text-white/70 mb-2" style={{ fontSize: '0.9rem' }}>
+                {workshop.tagline}
+              </p>
+              <h3 className="text-white font-bold" style={{ fontSize: '1.5rem' }}>
+                {workshop.name}
+              </h3>
+            </div>
 
-            {/* Know More Button */}
-            <button className="neu-button opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {/* Know More Button - Bottom Right */}
+            <button className="workshop-outline-button flex-shrink-0">
               Know More
             </button>
           </div>
-        </div>
-
-        {/* Shine Effect on Hover */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
         </div>
       </div>
     </div>
@@ -78,7 +77,7 @@ const Workshops = () => {
         >
           <div className="overflow-hidden py-8">
             <div
-              className={`flex ${isPaused ? '' : 'animate-carousel'}`}
+              className="flex workshop-carousel"
               style={{
                 width: 'fit-content'
               }}
@@ -101,8 +100,8 @@ const Workshops = () => {
           </div>
 
           {/* Gradient Overlays for Edge Fade Effect */}
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-bg to-transparent pointer-events-none z-10"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-bg to-transparent pointer-events-none z-10"></div>
+          <div className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none z-10" style={{ background: 'linear-gradient(to right, var(--bg), transparent)' }}></div>
+          <div className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none z-10" style={{ background: 'linear-gradient(to left, var(--bg), transparent)' }}></div>
         </motion.div>
 
         {/* Hover Instruction */}
@@ -127,11 +126,11 @@ const Workshops = () => {
           }
         }
 
-        .animate-carousel {
+        .workshop-carousel {
           animation: carousel 30s linear infinite;
         }
 
-        .animate-carousel:hover {
+        .workshop-carousel:hover {
           animation-play-state: paused;
         }
 

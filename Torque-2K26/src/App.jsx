@@ -207,17 +207,27 @@ function App() {
         {/* Hero Section */}
         <Hero />
 
+        <div className="section-divider" />
+
         {/* About Section */}
         <About />
+
+        <div className="section-divider" />
 
         {/* Events Section */}
         <Events />
 
+        <div className="section-divider" />
+
         {/* Workshops Section */}
         <Workshops />
 
+        <div className="section-divider" />
+
         {/* Gallery Section */}
         <Gallery />
+
+        <div className="section-divider" />
 
         {/* Contact Section */}
         <Contact />

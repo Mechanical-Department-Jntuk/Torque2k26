@@ -30,31 +30,30 @@ const Events = () => {
   const EventCard = ({ event }) => (
     <motion.div
       variants={cardVariants}
-      whileHover={{ y: -8, transition: { duration: 0.3 } }}
+      className="industrial-card overflow-hidden cursor-pointer group flex flex-col h-full event-card"
       onClick={() => setSelectedEvent(event)}
-      className={`industrial-card overflow-hidden cursor-pointer group flex flex-col h-full ${event.bentoColSpan || 'col-span-1'} ${event.bentoRowSpan || 'row-span-1'}`}
     >
       {/* Event Image */}
-      <div className="relative h-48 md:h-56 overflow-hidden flex-shrink-0">
+      <div className="event-image relative flex-shrink-0">
         <img
           src={event.image}
           alt={event.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-500"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/50 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-gold/20 via-transparent to-transparent"></div>
       </div>
 
       {/* Event Content */}
-      <div className="p-6 flex flex-col flex-grow">
-        <h3 className="text-2xl font-bold text-gold mb-3 group-hover:text-yellow-400 transition-colors">
+      <div className="p-6 flex flex-col flex-grow event-border">
+        <h3 className="text-gold font-bold mb-3 group-hover:text-yellow-400 transition-colors" style={{ fontSize: '1.3rem' }}>
           {event.name}
         </h3>
-        <p className="text-text/80 text-sm mb-4 line-clamp-2 flex-grow">
+        <p className="text-text/60 text-sm mb-4 line-clamp-2 flex-grow">
           {event.tagline}
         </p>
 
-        {/* Register Button */}
-        <button className="neu-button w-full text-center mt-auto">
+        {/* View Details Button */}
+        <button className="neu-button w-full text-center mt-auto text-sm">
           View Details
         </button>
       </div>
@@ -67,7 +66,8 @@ const Events = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
-      className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+      style={{ backdropFilter: 'blur(12px)' }}
     >
       <motion.div
         initial={{ scale: 0.8, opacity: 0, y: 50 }}
@@ -75,16 +75,17 @@ const Events = () => {
         exit={{ scale: 0.8, opacity: 0, y: 50 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="industrial-card max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className="industrial-card max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gold hover:text-yellow-400 transition-colors z-10"
+          className="absolute top-4 right-4 z-10 neu-button p-2 text-gold hover:text-yellow-400 transition-colors"
+          style={{ minWidth: 'auto' }}
           aria-label="Close modal"
         >
           <svg
-            className="w-8 h-8"
+            className="w-6 h-6"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -190,18 +191,15 @@ const Events = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-[minmax(300px,auto)] gap-6 md:gap-8"
+          className="grid"
+          style={{
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '24px'
+          }}
         >
-          {events.map((event, index) => {
-            // Apply bento grid spanning dynamically based on index to make it interesting
-            const isLarge = index === 0 || index === 7;
-            const bentoEvent = {
-              ...event,
-              bentoColSpan: isLarge ? 'sm:col-span-2 lg:col-span-2' : 'col-span-1',
-              bentoRowSpan: isLarge ? 'row-span-2' : 'row-span-1'
-            };
-            return <EventCard key={event.id} event={bentoEvent} />;
-          })}
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
         </motion.div>
       </div>
 

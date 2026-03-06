@@ -34,32 +34,36 @@ const Contact = () => {
     <motion.div
       variants={cardVariants}
       whileHover={{ y: -8, transition: { duration: 0.3 } }}
-      className="industrial-card p-6 text-center h-full flex flex-col items-center group"
+      className="person-card"
     >
-      {/* Profile Photo - Perfect Circle */}
-      <div className="relative w-32 h-32 mx-auto mb-5 flex-shrink-0">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gold to-yellow-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
+      {/* Profile Photo - Circular with double border */}
+      <div className="person-photo-wrapper">
         <img
           src={person.image}
           alt={person.name}
-          className="relative w-full h-full object-cover rounded-full border-2 border-gold/20 shadow-lg group-hover:border-gold/50 transition-colors duration-300"
+          className="person-photo"
         />
       </div>
 
       {/* Name */}
-      <h3 className="text-xl font-bold text-gold mb-1">
+      <h3 className="person-name">
         {person.name}
       </h3>
 
       {/* Role */}
-      <p className="text-text/80 text-sm mb-1">
+      <p className="person-role">
         {person.role}
       </p>
 
-      {/* Year */}
+      {/* Year/Branch */}
       {person.year && (
-        <p className="text-text/60 text-xs mb-3">
+        <p className="person-year">
           Year {person.year}
+        </p>
+      )}
+      {person.branch && (
+        <p className="person-year">
+          {person.branch}
         </p>
       )}
 
@@ -67,7 +71,7 @@ const Contact = () => {
       {person.phone && (
         <a
           href={`tel:${person.phone}`}
-          className="inline-flex items-center gap-2 text-gold hover:text-yellow-400 transition-colors text-sm"
+          className="person-phone"
         >
           <svg
             className="w-4 h-4"
@@ -88,21 +92,26 @@ const Contact = () => {
 
   const TeamSection = ({ title, members }) => (
     <div className="mb-16">
-      <motion.h3
-        initial={{ opacity: 0, x: -20 }}
-        whileInView={{ opacity: 1, x: 0 }}
+      {/* Section Heading with Horizontal Rules */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="text-3xl font-bold text-gold mb-8 text-center"
+        className="team-section-heading"
       >
-        {title}
-      </motion.h3>
+        <div className="team-section-line"></div>
+        <h3 className="team-section-title">{title}</h3>
+        <div className="team-section-line"></div>
+      </motion.div>
+
+      {/* Cards Container */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}
-        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+        className="team-cards-container"
       >
         {members.map((member, index) => (
           <PersonCard key={index} person={member} />

@@ -40,9 +40,16 @@ const CountdownTimer = ({ targetDate }) => {
       className="flex flex-col items-center"
     >
       <div
-        className="industrial-card px-6 py-4 min-w-[80px]"
+        className="neu-card px-6 py-4"
+        style={{ minWidth: '90px' }}
       >
-        <div className="text-3xl font-bold text-gold mb-1 font-mono">
+        <div 
+          className="font-bold text-gold mb-1 font-mono"
+          style={{ 
+            fontSize: '2.5rem',
+            textShadow: '0 0 15px rgba(212,175,55,0.3)'
+          }}
+        >
           {String(value).padStart(2, '0')}
         </div>
       </div>
@@ -108,18 +115,39 @@ const Hero = () => {
             {festInfo.department}
           </motion.h4>
 
+          {/* Radial Gold Glow Behind Logo */}
+          <div
+            style={{
+              position: 'absolute',
+              width: '600px',
+              height: '600px',
+              background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          ></div>
+
           {/* Torque Logo */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="mb-6"
+            className="mb-6 relative"
+            style={{ zIndex: 1 }}
           >
             <img
               src="/images/TORQUE.svg"
               alt="Torque Logo"
-              className="w-full max-w-xs mx-auto"
-              style={{ maxHeight: '120px', objectFit: 'contain' }}
+              className="mx-auto"
+              style={{
+                width: '100%',
+                maxWidth: '600px',
+                height: 'auto',
+                filter: 'drop-shadow(0 0 40px rgba(212,175,55,0.4))'
+              }}
             />
           </motion.div>
 
@@ -129,6 +157,9 @@ const Hero = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8, duration: 0.6 }}
             className="text-4xl md:text-6xl font-bold text-gold mb-8"
+            style={{
+              textShadow: '0 0 30px rgba(212,175,55,0.5), 0 0 60px rgba(212,175,55,0.2)'
+            }}
           >
             {festInfo.title}
           </motion.h1>
@@ -141,9 +172,14 @@ const Hero = () => {
             className="mb-12 flex flex-col items-center gap-6"
           >
             <div
-              className="industrial-card px-12 py-6 inline-block"
+              className="neu-card px-12 py-6 inline-block"
             >
-              <div className="text-3xl md:text-5xl font-bold text-gold tracking-widest mb-4 text-center">
+              <div 
+                className="text-3xl md:text-5xl font-bold text-gold tracking-widest mb-4 text-center"
+                style={{
+                  textShadow: '0 0 20px rgba(212,175,55,0.3)'
+                }}
+              >
                 COMING SOON
               </div>
               <CountdownTimer targetDate={festInfo.festDate} />
