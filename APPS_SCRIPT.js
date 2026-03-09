@@ -65,19 +65,27 @@ TROUBLESHOOTING:
 • Check spam folder if emails not received
 */
 
-const SHEET_ID = 'YOUR_SHEET_ID_HERE'
+const SHEET_ID = '1JKZpT4sXZBKEl82yUZuJXncLXH_4umj1J-UEUHGk9CU'
 
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents)
+    console.log("Submitting registration for: " + data.name + " (" + (data.registrationId || "NEW") + ")")
+
     const ss = SpreadsheetApp.openById(SHEET_ID)
     const master = ss.getSheetByName('MASTER')
+
+    if (!master) {
+      throw new Error("Sheet tab named 'MASTER' not found. Please create one named 'MASTER' exactly.")
+    }
 
     const lastRow = master.getLastRow()
     const count = String(lastRow).padStart(4, '0')
     const prefix = data.category === 'WORKSHOP' ? 'WRK' : 'EVT'
-    const registrationId = 'TRQ26-' + prefix + '-' + count
+    const registrationId = data.registrationId ||
+      ('TRQ26-' + prefix + '-' + count)
 
+    // Match sheet layout: Timestamp | RegID | Category | Item | Type | Name | Phone | Email | College | RollNo | YearBranch ...
     master.appendRow([
       new Date(),
       registrationId,
@@ -89,7 +97,7 @@ function doPost(e) {
       data.email,
       data.college,
       data.rollNo,
-      data.yearBranch,
+      data.branch || data.yearBranch || '-', // Handle both field names for safety
       data.amountDue,
       data.paymentMethod,
       data.transactionId,
@@ -108,7 +116,7 @@ function doPost(e) {
       }))
       .setMimeType(ContentService.MimeType.JSON)
 
-  } catch(err) {
+  } catch (err) {
     return ContentService
       .createTextOutput(JSON.stringify({
         result: 'error',
@@ -120,16 +128,16 @@ function doPost(e) {
 
 function sendParticipantEmail(data, registrationId) {
   try {
-    const statusMessage = 
-      data.registrationType === 'INTERNAL' 
+    const statusMessage =
+      data.registrationType === 'INTERNAL'
         ? "You're all set! Carry your college ID on the event day."
-      : data.registrationType === 'EXTERNAL'
-        ? "Your payment is pending verification. A coordinator will confirm via phone before the event. Keep your Transaction ID (" + data.transactionId + ") handy."
-      : "Visit the registration desk on the event day and pay ₹" + data.amountDue + " via " + data.paymentMethod + " at the venue."
+        : data.registrationType === 'EXTERNAL'
+          ? "Your payment is pending verification. A coordinator will confirm via phone before the event. Keep your Transaction ID (" + data.transactionId + ") handy."
+          : "Visit the registration desk on the event day and pay ₹" + data.amountDue + " via " + data.paymentMethod + " at the venue."
 
     const amountText = data.amountDue == 0 ? 'FREE' : '₹' + data.amountDue
 
-    const body = 
+    const body =
       "Dear " + data.name + ",\n\n" +
       "Your registration for Torque 2K26 is confirmed!\n\n" +
       "─────────────────────────────\n" +
@@ -152,7 +160,7 @@ function sendParticipantEmail(data, registrationId) {
       subject: '✅ Registration Confirmed — ' + data.itemName + ' | Torque 2K26',
       body: body
     })
-  } catch(err) {
+  } catch (err) {
     Logger.log('Participant email failed: ' + err.message)
   }
 }
@@ -160,23 +168,23 @@ function sendParticipantEmail(data, registrationId) {
 function sendCoordinatorEmail(data, registrationId) {
   try {
     const coordinatorMap = {
-      'Chess Monarch':       'YOUR_EMAIL',
-      'Project Expo':        'YOUR_EMAIL',
-      'Bridge Building':     'YOUR_EMAIL',
-      'Lathe Master':        'YOUR_EMAIL',
-      'Robo Race':           'YOUR_EMAIL',
-      'Design Freak':        'YOUR_EMAIL',
-      'Slide Plain':         'YOUR_EMAIL',
-      'Casting Crown':       'YOUR_EMAIL',
-      'Engine Montage':      'YOUR_EMAIL',
-      'Quiz':                'YOUR_EMAIL',
-      'Rhythmic Fusion':     'YOUR_EMAIL',
-      'Robotics':            'YOUR_EMAIL'
+      'Chess Monarch': 'torque2025@gmail.com',
+      'Project Expo': 'torque2025@gmail.com',
+      'Bridge Building': 'torque2025@gmail.com',
+      'Lathe Master': 'torque2025@gmail.com',
+      'Robo Race': 'torque2025@gmail.com',
+      'Design Freak': 'torque2025@gmail.com',
+      'Slide Plain': 'torque2025@gmail.com',
+      'Casting Crown': 'torque2025@gmail.com',
+      'Engine Montage': 'torque2025@gmail.com',
+      'Quiz': 'torque2025@gmail.com',
+      'Rhythmic Fusion': 'torque2025@gmail.com',
+      'Robotics': 'torque2025@gmail.com'
       // Add more events/workshops as needed
     }
 
     const coordinatorEmail = coordinatorMap[data.itemName]
-    if (!coordinatorEmail || coordinatorEmail === 'YOUR_EMAIL') return
+    if (!coordinatorEmail) return
 
     MailApp.sendEmail({
       to: coordinatorEmail,
@@ -192,7 +200,7 @@ function sendCoordinatorEmail(data, registrationId) {
         'Status: ' + data.paymentStatus + '\n' +
         (data.transactionId !== '-' ? 'UTR   : ' + data.transactionId + '\n' : '')
     })
-  } catch(err) {
+  } catch (err) {
     Logger.log('Coordinator email failed: ' + err.message)
   }
 }

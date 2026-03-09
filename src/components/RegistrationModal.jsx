@@ -1,1170 +1,693 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { festInfo } from '../data/data.js';
+import { useState } from 'react'
+import { festInfo } from '../data/data.js'
 
 const RegistrationModal = ({ item, onClose }) => {
-  const [step, setStep] = useState(1);
-  const [type, setType] = useState(null);
+
+  const [step, setStep] = useState(1)
+  const [type, setType] = useState(null)
   const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    rollNo: '',
-    branch: '',
-    year: '',
-    college: '',
-    transactionId: '',
-    paymentMethod: ''
-  });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [submitError, setSubmitError] = useState('');
-  const [copied, setCopied] = useState(false);
+    name: '', phone: '', email: '',
+    branch: '', rollNo: '',
+    college: '', transactionId: '',
+    paymentMethod: '', screenshot: null
+  })
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [submitError, setSubmitError] = useState('')
+  const [copied, setCopied] = useState(false)
 
-  const price = type ? item.prices[type] : 0;
-  const isFree = price === 0;
-
-  // Validation function
-  const validate = () => {
-    const newErrors = {};
-
-    // Shared validation
-    if (!form.name.trim()) newErrors.name = 'Full name is required';
-    if (!/^\d{10}$/.test(form.phone)) newErrors.phone = 'Phone must be 10 digits';
-    if (!/^.+@.+\..+/.test(form.email)) newErrors.email = 'Valid email required';
-
-    // Type-specific validation
+  // ─── Price logic ───────────────────────────────────────
+  const getPrice = () => {
+    if (!type) return null
     if (type === 'internal') {
-      if (!form.rollNo.trim()) newErrors.rollNo = 'Roll number is required';
-      if (form.branch === '' || form.branch === 'Select Branch') {
-        newErrors.branch = 'Please select a branch';
-      }
-      if (form.year === '' || form.year === 'Select Year') {
-        newErrors.year = 'Please select a year';
-      }
+      return form.branch === 'ME'
+        ? item.prices.internalME
+        : form.branch
+          ? item.prices.internalOthers
+          : null
     }
+    return type === 'external' ? item.prices.external : item.prices.onsite
+  }
 
+  const price = getPrice()
+  const isFree = price === 0
+  const activeUpiId = item.upiId || festInfo.upiId
+
+  const update = (field, value) => {
+    setForm(f => ({ ...f, [field]: value }))
+    setErrors(e => ({ ...e, [field]: '' }))
+  }
+
+  // ─── Validation ────────────────────────────────────────
+  const validate = () => {
+    const e = {}
+    if (!form.name.trim()) e.name = 'Required'
+    if (!/^\d{10}$/.test(form.phone)) e.phone = 'Enter valid 10-digit number'
+    if (!form.email.includes('@') || !form.email.includes('.')) e.email = 'Enter valid email'
+    if (type === 'internal') {
+      if (!form.rollNo.trim()) e.rollNo = 'Required'
+      if (!form.branch) e.branch = 'Select your branch'
+    }
     if (type === 'external') {
-      if (!form.college.trim()) newErrors.college = 'College name is required';
-      if (step === 3 && !form.transactionId.trim()) {
-        newErrors.transactionId = 'Transaction ID is required';
-      }
+      if (!form.college.trim()) e.college = 'Required'
     }
-
     if (type === 'onsite') {
-      if (!form.paymentMethod) newErrors.paymentMethod = 'Select a payment method';
+      if (!form.paymentMethod) e.paymentMethod = 'Select payment method'
     }
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const validatePayment = () => {
+    if (!form.transactionId.trim() && !form.screenshot) {
+      setErrors({ proof: 'Provide Transaction ID or upload screenshot' })
+      return false
+    }
+    return true
+  }
 
-  // Handle submit
+  // ─── Submit ────────────────────────────────────────────
+  const generateId = (category) => {
+    const prefix = category === 'WORKSHOP' ? 'WRK' : 'EVT'
+    const ts = Date.now().toString().slice(-6)
+    return 'TRQ26-' + prefix + '-' + ts
+  }
+
   const handleSubmit = async () => {
-    if (!validate()) return;
-    setLoading(true);
-    setSubmitError('');
+    setLoading(true)
+    setSubmitError('')
+
+    const clientRegId = generateId(item.category || 'EVENT')
+    const finalPrice = price ?? 0
 
     const payload = {
+      registrationId: clientRegId,
       itemName: item.name,
-      category: item.category || (item.id ? 'EVENT' : 'WORKSHOP'),
+      category: item.category || 'EVENT',
       registrationType: type.toUpperCase(),
-      amountDue: price,
-      name: form.name,
-      phone: form.phone,
-      email: form.email,
-      college: form.college || (type === 'internal' ? 'UCEK' : '-'),
+      amountDue: finalPrice,
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim(),
       rollNo: form.rollNo || '-',
-      yearBranch:
-        form.year && form.branch ? `${form.year} — ${form.branch}` : '-',
+      branch: form.branch || '-',
+      college: form.college || (type === 'internal' ? 'UCEK' : '-'),
       transactionId: form.transactionId || '-',
-      paymentMethod:
-        type === 'internal' ? 'WAIVED' : type === 'external' ? 'UPI' : form.paymentMethod,
-      paymentStatus:
-        type === 'internal'
-          ? 'WAIVED'
-          : type === 'external'
-          ? 'PENDING VERIFICATION'
-          : 'PENDING — COLLECT AT VENUE'
-    };
+      screenshotProvided: !!form.screenshot,
+      paymentMethod: type === 'internal' ? 'WAIVED'
+        : type === 'external' ? 'UPI'
+          : form.paymentMethod,
+      paymentStatus: type === 'internal' && finalPrice === 0 ? 'WAIVED'
+        : type === 'internal' ? 'PENDING VERIFICATION'
+          : type === 'external' ? 'PENDING VERIFICATION'
+            : 'PENDING — COLLECT AT VENUE'
+    }
 
     if (!festInfo.appsScriptUrl) {
-      await new Promise((r) => setTimeout(r, 1500));
-      setResult({
-        registrationId:
-          'TRQ26-' +
-          (item.category === 'WORKSHOP' ? 'WRK' : 'EVT') +
-          '-' +
-          Math.random().toString(36).substr(2, 9).toUpperCase()
-      });
-      setStep(4);
-      setLoading(false);
-      return;
+      await new Promise(r => setTimeout(r, 1200))
+      setResult({ registrationId: clientRegId })
+      setStep(4)
+      setLoading(false)
+      return
     }
 
     try {
-      const res = await fetch(festInfo.appsScriptUrl, {
+      await fetch(festInfo.appsScriptUrl, {
         method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.result === 'success') {
-        setResult(data);
-        setStep(4);
-      } else {
-        setSubmitError('Submission failed. Please try again.');
-      }
+      })
+      setResult({ registrationId: clientRegId })
+      setStep(4)
     } catch {
-      setSubmitError(
-        'Network error. Check your connection and retry.'
-      );
+      setSubmitError('Network error. Check your connection and retry.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  // Copy to clipboard handler
-  const handleCopyUPI = async () => {
-    try {
-      await navigator.clipboard.writeText(festInfo.upiId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      alert('Failed to copy UPI ID');
-    }
-  };
+  const copyUpi = () => {
+    navigator.clipboard.writeText(activeUpiId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
-  const handleCopyRegId = async () => {
-    try {
-      await navigator.clipboard.writeText(result.registrationId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      alert('Failed to copy Registration ID');
-    }
-  };
+  // ─── Shared input style ────────────────────────────────
+  const inputStyle = (field) => ({
+    width: '100%', background: '#111',
+    border: `1px solid ${errors[field] ? '#ff6b6b' : 'rgba(212,175,55,0.2)'}`,
+    borderRadius: '10px', padding: '11px 14px',
+    color: '#f0ede6', fontFamily: 'Poppins',
+    fontSize: '0.9rem', outline: 'none',
+    boxSizing: 'border-box'
+  })
 
-  // Input change handler
-  const handleInputChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
-    }
-  };
+  const fieldWrap = { marginBottom: '14px' }
+  const labelStyle = {
+    display: 'block', color: 'rgba(240,237,230,0.65)',
+    fontSize: '0.78rem', fontWeight: 500, marginBottom: '5px'
+  }
+  const errorStyle = {
+    color: '#ff6b6b', fontSize: '0.72rem', marginTop: '3px'
+  }
 
-  // Reusable input component
-  const FormInput = ({ label, field, type = 'text', placeholder, required = false }) => (
-    <div style={{ marginBottom: '20px' }}>
-      <label
-        style={{
-          display: 'block',
-          color: '#f0ede6',
-          fontSize: '0.85rem',
-          fontWeight: '600',
-          marginBottom: '8px'
-        }}
-      >
-        {label} {required && <span style={{ color: '#d4af37' }}>*</span>}
-      </label>
-      <input
-        type={type}
-        value={form[field]}
-        onChange={(e) => handleInputChange(field, e.target.value)}
-        placeholder={placeholder}
-        style={{
-          width: '100%',
-          background: '#111111',
-          border: `1px solid ${errors[field] ? '#ff6b6b' : 'rgba(212,175,55,0.2)'}`,
-          borderRadius: '12px',
-          padding: '12px 16px',
-          color: '#f0ede6',
-          fontFamily: 'Poppins',
-          fontSize: '0.9rem',
-          outline: 'none',
-          transition: 'all 0.2s ease',
-          boxSizing: 'border-box'
-        }}
-        onFocus={(e) => {
-          if (!errors[field]) {
-            e.target.style.borderColor = '#d4af37';
-            e.target.style.boxShadow = 'rgba(212,175,55,0.08) 0 0 0 3px';
-          }
-        }}
-        onBlur={(e) => {
-          if (!errors[field]) {
-            e.target.style.borderColor = 'rgba(212,175,55,0.2)';
-            e.target.style.boxShadow = 'none';
-          }
-        }}
-      />
-      {errors[field] && (
-        <p style={{ color: '#ff6b6b', fontSize: '0.75rem', marginTop: '4px' }}>
-          {errors[field]}
-        </p>
-      )}
-    </div>
-  );
-
-  // Reusable select component
-  const FormSelect = ({ label, field, options, required = false }) => (
-    <div style={{ marginBottom: '20px' }}>
-      <label
-        style={{
-          display: 'block',
-          color: '#f0ede6',
-          fontSize: '0.85rem',
-          fontWeight: '600',
-          marginBottom: '8px'
-        }}
-      >
-        {label} {required && <span style={{ color: '#d4af37' }}>*</span>}
-      </label>
-      <select
-        value={form[field]}
-        onChange={(e) => handleInputChange(field, e.target.value)}
-        style={{
-          width: '100%',
-          background: '#111111',
-          border: `1px solid ${errors[field] ? '#ff6b6b' : 'rgba(212,175,55,0.2)'}`,
-          borderRadius: '12px',
-          padding: '12px 16px',
-          color: '#f0ede6',
-          fontFamily: 'Poppins',
-          fontSize: '0.9rem',
-          outline: 'none',
-          appearance: 'none',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23d4af37' d='M1 3.5l5 5 5-5'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right 14px center',
-          paddingRight: '40px',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          boxSizing: 'border-box'
-        }}
-        onFocus={(e) => {
-          if (!errors[field]) {
-            e.target.style.borderColor = '#d4af37';
-            e.target.style.boxShadow = 'rgba(212,175,55,0.08) 0 0 0 3px';
-          }
-        }}
-        onBlur={(e) => {
-          if (!errors[field]) {
-            e.target.style.borderColor = 'rgba(212,175,55,0.2)';
-            e.target.style.boxShadow = 'none';
-          }
-        }}
-      >
-        {options.map((opt) => (
-          <option key={opt} value={opt} style={{ background: '#1a1a1a' }}>
-            {opt}
-          </option>
-        ))}
-      </select>
-      {errors[field] && (
-        <p style={{ color: '#ff6b6b', fontSize: '0.75rem', marginTop: '4px' }}>
-          {errors[field]}
-        </p>
-      )}
-    </div>
-  );
-
-  // Step indicator dots
-  const StepDots = () => (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '8px',
-        marginBottom: '24px'
-      }}
-    >
-      {[1, 2, 3].map((s) => (
-        <div
-          key={s}
-          style={{
-            height: '8px',
-            borderRadius: '4px',
-            background: s <= step ? '#d4af37' : 'rgba(212,175,55,0.2)',
-            transition: 'all 0.3s ease',
-            width: s === step ? '24px' : '8px'
-          }}
-        />
-      ))}
-    </div>
-  );
-
-  // Item badge
-  const ItemBadge = () => (
-    <div
-      style={{
-        display: 'inline-block',
-        margin: '0 auto 20px',
-        background: 'rgba(212, 175, 55, 0.08)',
-        border: '1px solid rgba(212, 175, 55, 0.3)',
-        borderRadius: '20px',
-        padding: '4px 16px',
-        color: '#d4af37',
-        fontSize: '0.85rem'
-      }}
-    >
-      {item.category || (item.id ? 'Event' : 'Workshop')} · {item.name}
-    </div>
-  );
-
+  // ─── Render ────────────────────────────────────────────
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 z-40"
-        style={{
-          background: 'rgba(0, 0, 0, 0.85)',
-          backdropFilter: 'blur(12px)'
-        }}
-        onClick={onClose}
-      />
+    <div style={S.overlay} onClick={onClose}>
+      <div style={S.box} onClick={e => e.stopPropagation()}>
 
-      {/* Modal */}
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            background: '#1a1a1a',
-            borderRadius: '20px',
-            boxShadow: '8px 8px 16px #080808, -8px -8px 16px #2a2a2a',
-            border: '1px solid rgba(212, 175, 55, 0.15)',
-            maxWidth: '500px',
-            width: '100%',
-            padding: '32px',
-            position: 'relative',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Close button */}
-          {step !== 4 && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 text-gold hover:text-yellow-400 transition-colors text-2xl font-bold"
-              aria-label="Close"
-            >
-              ×
+        <button style={S.closeBtn} onClick={onClose}>✕</button>
+
+        {/* Step dots */}
+        {step < 4 && (
+          <div style={S.dots}>
+            {[1, 2, 3].map(n => (
+              <div key={n} style={{
+                ...S.dot,
+                width: step === n ? '24px' : '8px',
+                background: step === n
+                  ? '#d4af37' : 'rgba(212,175,55,0.2)'
+              }} />
+            ))}
+          </div>
+        )}
+
+        {/* Item badge */}
+        {step < 4 && (
+          <div style={S.badge}>
+            {item.category || 'EVENT'} · {item.name}
+          </div>
+        )}
+
+        {/* ── STEP 1 ── */}
+        {step === 1 && (
+          <div>
+            <h2 style={S.heading}>Who are you?</h2>
+            <p style={S.sub}>Select your registration type</p>
+
+            {[
+              {
+                key: 'internal',
+                icon: '🎓',
+                title: 'UCEK Student',
+                sub: 'Mechanical — Free · Other branches — ₹' + item.prices.internalOthers,
+                badge: 'ME FREE',
+                badgeColor: '#4caf50'
+              },
+              {
+                key: 'external',
+                icon: '🌐',
+                title: 'Outside College',
+                sub: 'Online registration + UPI payment',
+                badge: '₹' + item.prices.external,
+                badgeColor: '#d4af37'
+              },
+              {
+                key: 'onsite',
+                icon: '🚶',
+                title: 'On-Site Walk-in',
+                sub: 'Pay at venue on event day',
+                badge: '₹' + item.prices.onsite,
+                badgeColor: '#d4af37'
+              }
+            ].map(opt => (
+              <div
+                key={opt.key}
+                style={S.typeCard}
+                onClick={() => { setType(opt.key); setStep(2) }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)'
+                  e.currentTarget.style.transform = 'translateX(4px)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'rgba(212,175,55,0.15)'
+                  e.currentTarget.style.transform = 'translateX(0)'
+                }}
+              >
+                <span style={{ fontSize: '1.8rem' }}>{opt.icon}</span>
+                <div style={{ flexGrow: 1 }}>
+                  <div style={{ color: '#f0ede6', fontWeight: 600, fontSize: '0.95rem' }}>
+                    {opt.title}
+                  </div>
+                  <div style={{ color: 'rgba(240,237,230,0.5)', fontSize: '0.78rem', marginTop: '2px' }}>
+                    {opt.sub}
+                  </div>
+                </div>
+                <span style={{
+                  background: opt.badgeColor === '#4caf50'
+                    ? 'rgba(76,175,80,0.12)' : 'rgba(212,175,55,0.1)',
+                  border: `1px solid ${opt.badgeColor === '#4caf50'
+                    ? 'rgba(76,175,80,0.3)' : 'rgba(212,175,55,0.3)'}`,
+                  color: opt.badgeColor,
+                  borderRadius: '20px', padding: '3px 10px',
+                  fontSize: '0.78rem', fontWeight: 700,
+                  whiteSpace: 'nowrap'
+                }}>
+                  {opt.badge}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── STEP 2 ── */}
+        {step === 2 && (
+          <div>
+            <button style={S.backBtn} onClick={() => { setStep(1); setErrors({}) }}>
+              ← Back
             </button>
-          )}
+            <h2 style={S.heading}>Your Details</h2>
 
-          {/* Step 1: Registration Type */}
-          {step === 1 && (
-            <>
-              {step < 4 && <StepDots />}
-              <div style={{ textAlign: 'center' }}>
-                <ItemBadge />
-              </div>
-              <h2
-                style={{
-                  color: '#f0ede6',
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  marginBottom: '20px',
-                  textAlign: 'center'
-                }}
-              >
-                Who are you?
-              </h2>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {/* Internal Card */}
-                <div
-                  onClick={() => {
-                    setType('internal');
-                    setStep(2);
-                  }}
-                  style={{
-                    background: '#111111',
-                    border: '1px solid rgba(212,175,55,0.15)',
-                    borderRadius: '14px',
-                    padding: '16px 18px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '14px',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(212,175,55,0.4)';
-                    e.currentTarget.style.background = '#161616';
-                    e.currentTarget.style.transform = 'translateX(4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(212,175,55,0.15)';
-                    e.currentTarget.style.background = '#111111';
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }}
-                >
-                  <div style={{ fontSize: '1.8rem' }}>🎓</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.95rem' }}>
-                      UCEK Student
-                    </div>
-                    <div
-                      style={{
-                        color: 'rgba(240,237,230,0.6)',
-                        fontSize: '0.78rem'
-                      }}
-                    >
-                      UCEK — Kakinada
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      background: 'rgba(76,175,80,0.15)',
-                      border: '1px solid rgba(76,175,80,0.3)',
-                      borderRadius: '20px',
-                      padding: '3px 10px',
-                      color: '#4caf50',
-                      fontSize: '0.8rem',
-                      fontWeight: '700'
-                    }}
-                  >
-                    FREE
-                  </div>
-                </div>
-
-                {/* External Card */}
-                <div
-                  onClick={() => {
-                    setType('external');
-                    setStep(2);
-                  }}
-                  style={{
-                    background: '#111111',
-                    border: '1px solid rgba(212,175,55,0.15)',
-                    borderRadius: '14px',
-                    padding: '16px 18px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '14px',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(212,175,55,0.4)';
-                    e.currentTarget.style.background = '#161616';
-                    e.currentTarget.style.transform = 'translateX(4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(212,175,55,0.15)';
-                    e.currentTarget.style.background = '#111111';
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }}
-                >
-                  <div style={{ fontSize: '1.8rem' }}>🌐</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.95rem' }}>
-                      Outside College
-                    </div>
-                    <div
-                      style={{
-                        color: 'rgba(240,237,230,0.6)',
-                        fontSize: '0.78rem'
-                      }}
-                    >
-                      Online registration + UPI payment
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      background: 'rgba(212,175,55,0.1)',
-                      border: '1px solid rgba(212,175,55,0.3)',
-                      borderRadius: '20px',
-                      padding: '3px 10px',
-                      color: '#d4af37',
-                      fontSize: '0.8rem',
-                      fontWeight: '700'
-                    }}
-                  >
-                    ₹{item.prices.external}
-                  </div>
-                </div>
-
-                {/* Onsite Card */}
-                <div
-                  onClick={() => {
-                    setType('onsite');
-                    setStep(2);
-                  }}
-                  style={{
-                    background: '#111111',
-                    border: '1px solid rgba(212,175,55,0.15)',
-                    borderRadius: '14px',
-                    padding: '16px 18px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '14px',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(212,175,55,0.4)';
-                    e.currentTarget.style.background = '#161616';
-                    e.currentTarget.style.transform = 'translateX(4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(212,175,55,0.15)';
-                    e.currentTarget.style.background = '#111111';
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }}
-                >
-                  <div style={{ fontSize: '1.8rem' }}>🚶</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.95rem' }}>
-                      On-Site Walk-in
-                    </div>
-                    <div
-                      style={{
-                        color: 'rgba(240,237,230,0.6)',
-                        fontSize: '0.78rem'
-                      }}
-                    >
-                      Register and pay at the venue
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      background: 'rgba(212,175,55,0.1)',
-                      border: '1px solid rgba(212,175,55,0.3)',
-                      borderRadius: '20px',
-                      padding: '3px 10px',
-                      color: '#d4af37',
-                      fontSize: '0.8rem',
-                      fontWeight: '700'
-                    }}
-                  >
-                    ₹{item.prices.onsite}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Step 2: Details */}
-          {step === 2 && (
-            <>
-              {step < 4 && <StepDots />}
-              <div style={{ textAlign: 'center' }}>
-                <ItemBadge />
-              </div>
-              <button
-                onClick={() => {
-                  setStep(1);
-                  setErrors({});
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#d4af37',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  marginBottom: '16px',
-                  fontWeight: '500'
-                }}
-              >
-                ← Back
-              </button>
-              <h2
-                style={{
-                  color: '#f0ede6',
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  marginBottom: '24px'
-                }}
-              >
-                Your Details
-              </h2>
-
-              {/* Shared fields */}
-              <FormInput
-                label="Full Name"
-                field="name"
+            {/* Name */}
+            <div style={fieldWrap}>
+              <label style={labelStyle}>Full Name *</label>
+              <input
+                style={inputStyle('name')}
+                value={form.name}
+                onChange={e => update('name', e.target.value)}
                 placeholder="Your full name"
-                required
               />
-              <FormInput
-                label="Phone Number"
-                field="phone"
-                type="tel"
+              {errors.name && <p style={errorStyle}>{errors.name}</p>}
+            </div>
+
+            {/* Phone */}
+            <div style={fieldWrap}>
+              <label style={labelStyle}>Phone Number *</label>
+              <input
+                style={inputStyle('phone')}
+                value={form.phone}
+                onChange={e => update('phone', e.target.value)}
                 placeholder="10-digit mobile number"
-                required
+                type="tel" maxLength={10}
               />
-              <div style={{ marginBottom: '20px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    color: '#f0ede6',
-                    fontSize: '0.85rem',
-                    fontWeight: '600',
-                    marginBottom: '8px'
-                  }}
-                >
-                  Email Address <span style={{ color: '#d4af37' }}>*</span>
-                </label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="We'll send your confirmation here"
-                  style={{
-                    width: '100%',
-                    background: '#111111',
-                    border: `1px solid ${errors.email ? '#ff6b6b' : 'rgba(212,175,55,0.2)'}`,
-                    borderRadius: '12px',
-                    padding: '12px 16px',
-                    color: '#f0ede6',
-                    fontFamily: 'Poppins',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    transition: 'all 0.2s ease',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    if (!errors.email) {
-                      e.target.style.borderColor = '#d4af37';
-                      e.target.style.boxShadow = 'rgba(212,175,55,0.08) 0 0 0 3px';
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (!errors.email) {
-                      e.target.style.borderColor = 'rgba(212,175,55,0.2)';
-                      e.target.style.boxShadow = 'none';
-                    }
-                  }}
-                />
-                {errors.email && (
-                  <p style={{ color: '#ff6b6b', fontSize: '0.75rem', marginTop: '4px' }}>
-                    {errors.email}
-                  </p>
-                )}
-                <p
-                  style={{
-                    fontSize: '0.75rem',
-                    color: 'rgba(240,237,230,0.5)',
-                    marginTop: '6px'
-                  }}
-                >
-                  📧 A confirmation email will be sent to this address
-                </p>
-              </div>
+              {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
+            </div>
 
-              {/* Type-specific fields */}
-              {type === 'internal' && (
-                <>
-                  <FormInput
-                    label="Roll Number"
-                    field="rollNo"
+            {/* Email */}
+            <div style={fieldWrap}>
+              <label style={labelStyle}>Email Address *</label>
+              <input
+                style={inputStyle('email')}
+                value={form.email}
+                onChange={e => update('email', e.target.value)}
+                placeholder="Confirmation will be sent here"
+                type="email"
+              />
+              {errors.email && <p style={errorStyle}>{errors.email}</p>}
+              <p style={{ color: 'rgba(240,237,230,0.4)', fontSize: '0.72rem', marginTop: '3px' }}>
+                📧 Confirmation email sent to this address
+              </p>
+            </div>
+
+            {/* Internal extras */}
+            {type === 'internal' && (
+              <>
+                <div style={fieldWrap}>
+                  <label style={labelStyle}>Roll Number *</label>
+                  <input
+                    style={inputStyle('rollNo')}
+                    value={form.rollNo}
+                    onChange={e => update('rollNo', e.target.value)}
                     placeholder="22N81A0XXX"
-                    required
                   />
-                  <FormSelect
-                    label="Branch"
-                    field="branch"
-                    options={[
-                      'Select Branch',
-                      'ME',
-                      'CE',
-                      'EEE',
-                      'ECE',
-                      'CSE',
-                      'IT',
-                      'Other'
-                    ]}
-                    required
-                  />
-                  <FormSelect
-                    label="Year"
-                    field="year"
-                    options={['Select Year', 'I', 'II', 'III', 'IV']}
-                    required
-                  />
-                </>
-              )}
+                  {errors.rollNo && <p style={errorStyle}>{errors.rollNo}</p>}
+                </div>
 
-              {type === 'external' && (
-                <FormInput
-                  label="College Name"
-                  field="college"
-                  placeholder="Your college name"
-                  required
-                />
-              )}
-
-              {type === 'onsite' && (
-                <>
-                  <FormInput
-                    label="College"
-                    field="college"
-                    placeholder="Leave blank if from UCEK"
-                    required={false}
-                  />
-                  <div style={{ marginBottom: '20px' }}>
-                    <label
-                      style={{
-                        display: 'block',
-                        color: '#f0ede6',
-                        fontSize: '0.85rem',
-                        fontWeight: '600',
-                        marginBottom: '12px'
-                      }}
-                    >
-                      Payment Method at Venue <span style={{ color: '#d4af37' }}>*</span>
-                    </label>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <button
-                        onClick={() => handleInputChange('paymentMethod', 'CASH')}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          borderRadius: '10px',
-                          border:
-                            form.paymentMethod === 'CASH'
-                              ? 'none'
-                              : '1px solid rgba(212,175,55,0.2)',
-                          background:
-                            form.paymentMethod === 'CASH'
-                              ? '#d4af37'
-                              : '#111',
-                          color:
-                            form.paymentMethod === 'CASH'
-                              ? '#0d0d0d'
-                              : '#d4af37',
-                          fontWeight: '700',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          fontSize: '0.95rem'
-                        }}
-                      >
-                        💵 Cash
-                      </button>
-                      <button
-                        onClick={() => handleInputChange('paymentMethod', 'UPI')}
-                        style={{
-                          flex: 1,
-                          padding: '12px',
-                          borderRadius: '10px',
-                          border:
-                            form.paymentMethod === 'UPI'
-                              ? 'none'
-                              : '1px solid rgba(212,175,55,0.2)',
-                          background:
-                            form.paymentMethod === 'UPI'
-                              ? '#d4af37'
-                              : '#111',
-                          color:
-                            form.paymentMethod === 'UPI'
-                              ? '#0d0d0d'
-                              : '#d4af37',
-                          fontWeight: '700',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          fontSize: '0.95rem'
-                        }}
-                      >
-                        📱 UPI
-                      </button>
-                    </div>
-                    {errors.paymentMethod && (
-                      <p style={{ color: '#ff6b6b', fontSize: '0.75rem', marginTop: '4px' }}>
-                        {errors.paymentMethod}
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {submitError && (
-                <p style={{ color: '#ff6b6b', fontSize: '0.85rem', marginBottom: '16px' }}>
-                  {submitError}
-                </p>
-              )}
-
-              <button
-                onClick={() => {
-                  if (type === 'external') {
-                    if (validate()) setStep(3);
-                  } else {
-                    handleSubmit();
-                  }
-                }}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  background: loading ? 'rgba(212,175,55,0.5)' : '#d4af37',
-                  color: loading ? '#999' : '#0d0d0d',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '14px',
-                  fontWeight: '700',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontSize: '1rem',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {loading ? (
-                  <span>⏳ Submitting...</span>
-                ) : type === 'external' ? (
-                  'Next — Payment →'
-                ) : (
-                  'Submit Registration'
-                )}
-              </button>
-            </>
-          )}
-
-          {/* Step 3: Payment (external only) */}
-          {step === 3 && (
-            <>
-              {step < 4 && <StepDots />}
-              <div style={{ textAlign: 'center' }}>
-                <ItemBadge />
-              </div>
-              <button
-                onClick={() => {
-                  setStep(2);
-                  setErrors({});
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#d4af37',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  marginBottom: '16px',
-                  fontWeight: '500'
-                }}
-              >
-                ← Back
-              </button>
-              <h2
-                style={{
-                  color: '#f0ede6',
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  marginBottom: '24px'
-                }}
-              >
-                Complete Payment
-              </h2>
-
-              {/* Payment box */}
-              <div
-                style={{
-                  border: '1.5px solid rgba(212,175,55,0.4)',
-                  borderRadius: '16px',
-                  padding: '24px',
-                  background: 'rgba(212,175,55,0.03)',
-                  marginBottom: '24px',
-                  textAlign: 'center'
-                }}
-              >
-                <p
-                  style={{
-                    color: 'rgba(240,237,230,0.6)',
-                    fontSize: '0.75rem',
-                    marginBottom: '8px'
-                  }}
-                >
-                  Amount to Pay
-                </p>
-                <p
-                  style={{
-                    color: '#d4af37',
-                    fontSize: '3rem',
-                    fontWeight: '800',
-                    margin: '0 0 16px 0'
-                  }}
-                >
-                  ₹{item.prices.external}
-                </p>
-
-                <div
-                  style={{
-                    borderTop: '1px solid rgba(212,175,55,0.1)',
-                    borderBottom: '1px solid rgba(212,175,55,0.1)',
-                    margin: '16px 0',
-                    padding: '16px 0'
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      background: '#111',
-                      borderRadius: '10px',
-                      padding: '10px 14px'
-                    }}
+                <div style={fieldWrap}>
+                  <label style={labelStyle}>Branch *</label>
+                  <select
+                    style={{ ...inputStyle('branch'), appearance: 'none' }}
+                    value={form.branch}
+                    onChange={e => update('branch', e.target.value)}
                   >
-                    <div>
-                      <p
-                        style={{
-                          color: 'rgba(240,237,230,0.6)',
-                          fontSize: '0.75rem',
-                          margin: '0 0 4px 0'
-                        }}
-                      >
-                        UPI ID
-                      </p>
-                      <p
-                        style={{
-                          color: '#d4af37',
-                          fontFamily: 'monospace',
-                          fontWeight: '600',
-                          margin: 0,
-                          fontSize: '0.95rem'
-                        }}
-                      >
-                        {festInfo.upiId}
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleCopyUPI}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#d4af37',
-                        cursor: 'pointer',
-                        fontSize: '1.1rem'
-                      }}
-                      title="Copy UPI ID"
-                    >
-                      {copied ? '✓' : '📋'}
-                    </button>
-                  </div>
+                    <option value="">Select Branch</option>
+                    {['ME', 'CE', 'EEE', 'ECE', 'CSE', 'IT', 'Other'].map(b => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                  {errors.branch && <p style={errorStyle}>{errors.branch}</p>}
                 </div>
 
-                <p
-                  style={{
-                    color: 'rgba(240,237,230,0.6)',
-                    fontSize: '0.82rem',
-                    marginTop: '12px',
-                    lineHeight: '1.4'
-                  }}
-                >
-                  Pay via GPay, PhonePe, or any UPI app.
-                  <br />
-                  Then enter the Transaction ID below.
-                </p>
-              </div>
-
-              {/* Transaction ID */}
-              <FormInput
-                label="Transaction ID (UTR Number)"
-                field="transactionId"
-                placeholder="12-digit UTR number from your UPI app"
-                required
-              />
-
-              {submitError && (
-                <p style={{ color: '#ff6b6b', fontSize: '0.85rem', marginBottom: '16px' }}>
-                  {submitError}
-                </p>
-              )}
-
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  background: loading ? 'rgba(212,175,55,0.5)' : '#d4af37',
-                  color: loading ? '#999' : '#0d0d0d',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '14px',
-                  fontWeight: '700',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontSize: '1rem',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {loading ? '⏳ Submitting...' : 'Confirm Registration'}
-              </button>
-            </>
-          )}
-
-          {/* Step 4: Success */}
-          {step === 4 && (
-            <>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', damping: 15, stiffness: 200 }}
-                style={{
-                  width: '80px',
-                  height: '80px',
-                  border: '3px solid #d4af37',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 24px',
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: '#d4af37'
-                }}
-              >
-                ✓
-              </motion.div>
-
-              <h2
-                style={{
-                  color: '#d4af37',
-                  fontSize: '1.6rem',
-                  fontWeight: '700',
-                  textAlign: 'center',
-                  marginBottom: '24px'
-                }}
-              >
-                You're Registered!
-              </h2>
-
-              {/* Registration ID */}
-              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                <p
-                  style={{
-                    color: 'rgba(240,237,230,0.6)',
-                    fontSize: '0.75rem',
-                    marginBottom: '8px'
-                  }}
-                >
-                  Your Registration ID
-                </p>
-                <div
-                  onClick={handleCopyRegId}
-                  style={{
-                    fontFamily: 'monospace',
-                    color: '#d4af37',
-                    fontSize: '1.15rem',
-                    background: '#111',
-                    border: '1px solid rgba(212,175,55,0.3)',
-                    borderRadius: '10px',
-                    padding: '10px 20px',
-                    display: 'inline-block',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#d4af37';
-                    e.currentTarget.style.boxShadow = '0 0 12px rgba(212,175,55,0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(212,175,55,0.3)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                  title="Click to copy"
-                >
-                  {result?.registrationId}
-                </div>
-              </div>
-
-              {/* Summary */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alamItems: 'center',
-                  background: '#111',
-                  borderRadius: '10px',
-                  padding: '12px 16px',
-                  marginBottom: '16px'
-                }}
-              >
-                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                  {item.name}
-                </span>
-                <span
-                  style={{
-                    color:
-                      type === 'internal' || price === 0
-                        ? '#4caf50'
-                        : '#d4af37',
-                    fontWeight: '700',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  {type === 'internal' || price === 0 ? 'FREE' : `₹${price}`}
-                </span>
-              </div>
-
-              {/* What happens next */}
-              <div
-                style={{
-                  background: 'rgba(212,175,55,0.05)',
-                  border: '1px solid rgba(212,175,55,0.15)',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  marginBottom: '16px',
-                  fontSize: '0.9rem',
-                  color: '#f0ede6',
-                  lineHeight: '1.6'
-                }}
-              >
-                {type === 'internal' && (
-                  <>
-                    ✅ You're all set! Bring your college ID on the event day.
-                  </>
-                )}
-                {type === 'external' && (
-                  <>
-                    ⏳ Payment verification pending.
-                    <br />A coordinator will confirm via your registered phone number.
-                    <br />
-                    <br />
-                    Keep your Transaction ID: <span style={{ fontWeight: 'bold' }}>
-                      {form.transactionId}
+                {/* Price preview after branch selected */}
+                {form.branch && (
+                  <div style={{
+                    background: isFree ? 'rgba(76,175,80,0.08)' : 'rgba(212,175,55,0.06)',
+                    border: `1px solid ${isFree ? 'rgba(76,175,80,0.25)' : 'rgba(212,175,55,0.2)'}`,
+                    borderRadius: '10px', padding: '10px 14px',
+                    marginBottom: '14px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                  }}>
+                    <span style={{ color: 'rgba(240,237,230,0.6)', fontSize: '0.85rem' }}>
+                      Registration Fee
                     </span>
-                  </>
+                    <span style={{
+                      color: isFree ? '#4caf50' : '#d4af37',
+                      fontWeight: 700, fontSize: '1rem'
+                    }}>
+                      {isFree ? 'FREE' : '₹' + price}
+                      <span style={{ color: 'rgba(240,237,230,0.4)', fontSize: '0.72rem', fontWeight: 400, marginLeft: '6px' }}>
+                        ({form.branch === 'ME' ? 'Mechanical — no fee' : 'other branch fee'})
+                      </span>
+                    </span>
+                  </div>
                 )}
-                {type === 'onsite' && (
-                  <>
-                    📍 Visit the registration desk on the event day.
-                    <br />
-                    Pay ₹{price} via {form.paymentMethod} at the venue.
-                    <br />
-                    Show this Registration ID at the desk.
-                  </>
-                )}
-              </div>
+              </>
+            )}
 
-              {/* Confirmation email */}
-              <p
-                style={{
-                  color: 'rgba(240,237,230,0.6)',
-                  fontSize: '0.8rem',
-                  textAlign: 'center',
-                  marginBottom: '20px'
-                }}
-              >
-                📧 A confirmation email has been sent to <strong>{form.email}</strong>
+            {/* External extras */}
+            {type === 'external' && (
+              <div style={fieldWrap}>
+                <label style={labelStyle}>College Name *</label>
+                <input
+                  style={inputStyle('college')}
+                  value={form.college}
+                  onChange={e => update('college', e.target.value)}
+                  placeholder="Your college name"
+                />
+                {errors.college && <p style={errorStyle}>{errors.college}</p>}
+              </div>
+            )}
+
+            {/* Onsite extras */}
+            {type === 'onsite' && (
+              <>
+                <div style={fieldWrap}>
+                  <label style={labelStyle}>College (Optional)</label>
+                  <input
+                    style={inputStyle('college')}
+                    value={form.college}
+                    onChange={e => update('college', e.target.value)}
+                    placeholder="Leave blank if UCEK"
+                  />
+                </div>
+
+                <div style={fieldWrap}>
+                  <label style={labelStyle}>Payment Method at Venue *</label>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                    {['CASH', 'UPI'].map(method => (
+                      <button
+                        key={method}
+                        type="button"
+                        style={{
+                          flex: 1, padding: '11px',
+                          borderRadius: '10px', cursor: 'pointer',
+                          fontFamily: 'Poppins', fontWeight: 600,
+                          fontSize: '0.9rem', transition: 'all 0.2s',
+                          background: form.paymentMethod === method
+                            ? '#d4af37' : '#111',
+                          color: form.paymentMethod === method
+                            ? '#0d0d0d' : '#d4af37',
+                          border: `1px solid ${form.paymentMethod === method
+                            ? '#d4af37' : 'rgba(212,175,55,0.25)'}`
+                        }}
+                        onClick={() => update('paymentMethod', method)}
+                      >
+                        {method === 'CASH' ? '💵 Cash' : '📱 UPI'}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.paymentMethod && <p style={errorStyle}>{errors.paymentMethod}</p>}
+                </div>
+              </>
+            )}
+
+            {submitError && <p style={{ color: '#ff6b6b', fontSize: '0.82rem', marginBottom: '10px' }}>{submitError}</p>}
+
+            <button
+              style={{
+                ...S.submitBtn,
+                opacity: loading ? 0.7 : 1,
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
+              onClick={() => {
+                if (!validate()) return
+                if (type === 'external') { setStep(3); return }
+                handleSubmit()
+              }}
+              disabled={loading}
+            >
+              {loading ? 'Submitting...' : type === 'external' ? 'Next — Payment →' : 'Submit Registration'}
+            </button>
+          </div>
+        )}
+
+        {/* ── STEP 3 — Payment (external only) ── */}
+        {step === 3 && (
+          <div>
+            <button style={S.backBtn} onClick={() => { setStep(2); setErrors({}) }}>
+              ← Back
+            </button>
+            <h2 style={S.heading}>Complete Payment</h2>
+
+            {/* UPI payment box */}
+            <div style={S.payBox}>
+              <p style={{ color: 'rgba(240,237,230,0.5)', fontSize: '0.78rem', marginBottom: '4px' }}>
+                Amount to Pay
+              </p>
+              <p style={{ color: '#d4af37', fontSize: '2.8rem', fontWeight: 800, lineHeight: 1, marginBottom: '16px' }}>
+                ₹{item.prices.external}
               </p>
 
-              <button
-                onClick={onClose}
-                className="neu-button w-full"
-                style={{ padding: '14px' }}
-              >
-                Done
-              </button>
-            </>
-          )}
-        </motion.div>
-      </div>
-    </>
-  );
-};
+              <div style={S.upiRow}>
+                <div>
+                  <p style={{ color: 'rgba(240,237,230,0.5)', fontSize: '0.72rem' }}>UPI ID</p>
+                  <p style={{ color: '#d4af37', fontFamily: 'monospace', fontWeight: 600, fontSize: '0.95rem' }}>
+                    {activeUpiId}
+                  </p>
+                </div>
+                <button style={S.copyBtn} onClick={copyUpi}>
+                  {copied ? '✓ Copied' : 'Copy'}
+                </button>
+              </div>
 
-export default RegistrationModal;
+              <p style={{ color: 'rgba(240,237,230,0.45)', fontSize: '0.78rem', marginTop: '12px', lineHeight: 1.5 }}>
+                Pay via GPay, PhonePe or any UPI app then provide proof below
+              </p>
+            </div>
+
+            {/* Proof — either OR */}
+            <div style={fieldWrap}>
+              <label style={labelStyle}>Transaction ID (UTR)</label>
+              <input
+                style={inputStyle('transactionId')}
+                value={form.transactionId}
+                onChange={e => update('transactionId', e.target.value)}
+                placeholder="12-digit UTR number"
+              />
+            </div>
+
+            <div style={{ textAlign: 'center', color: 'rgba(240,237,230,0.35)', fontSize: '0.8rem', margin: '4px 0 10px' }}>
+              — or —
+            </div>
+
+            <div style={fieldWrap}>
+              <input
+                type="file"
+                accept="image/*"
+                id="screenshot"
+                style={{ display: 'none' }}
+                onChange={e => update('screenshot', e.target.files[0])}
+              />
+              <label htmlFor="screenshot" style={S.uploadLabel}>
+                📎 Upload Payment Screenshot (optional)
+              </label>
+              {form.screenshot && (
+                <p style={{ color: '#d4af37', fontSize: '0.78rem', marginTop: '6px' }}>
+                  ✓ {form.screenshot.name}
+                </p>
+              )}
+            </div>
+
+            {errors.proof && <p style={errorStyle}>{errors.proof}</p>}
+            {submitError && <p style={{ color: '#ff6b6b', fontSize: '0.82rem', marginBottom: '10px' }}>{submitError}</p>}
+
+            <button
+              style={{
+                ...S.submitBtn,
+                opacity: loading ? 0.7 : 1,
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
+              onClick={() => { if (validatePayment()) handleSubmit() }}
+              disabled={loading}
+            >
+              {loading ? 'Submitting...' : 'Confirm Registration'}
+            </button>
+          </div>
+        )}
+
+        {/* ── STEP 4 — Success ── */}
+        {step === 4 && result && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={S.checkCircle}>✓</div>
+
+            <h2 style={{ color: '#d4af37', fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>
+              You&apos;re Registered!
+            </h2>
+
+            <p style={{ color: 'rgba(240,237,230,0.6)', fontSize: '0.85rem', marginBottom: '16px' }}>
+              {item.name}
+            </p>
+
+            <div style={S.idBox}>
+              <p style={{ color: 'rgba(240,237,230,0.5)', fontSize: '0.75rem', marginBottom: '4px' }}>
+                Registration ID
+              </p>
+              <p style={{ color: '#d4af37', fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 700 }}>
+                {result.registrationId}
+              </p>
+            </div>
+
+            <div style={{
+              background: '#111', borderRadius: '10px',
+              padding: '14px', marginTop: '14px',
+              border: '1px solid rgba(212,175,55,0.1)',
+              textAlign: 'left'
+            }}>
+              <p style={{ color: '#f0ede6', fontSize: '0.85rem', lineHeight: 1.6 }}>
+                {type === 'internal' && price === 0 &&
+                  '✅ You\'re all set! Carry your college ID on the event day.'}
+                {type === 'internal' && price > 0 &&
+                  '⏳ Your payment is pending verification. A coordinator will confirm via phone.'}
+                {type === 'external' &&
+                  '⏳ Payment pending verification. Keep your Transaction ID handy.'}
+                {type === 'onsite' &&
+                  `📍 Visit the registration desk and pay ₹${price} via ${form.paymentMethod} on the event day.`}
+              </p>
+            </div>
+
+            <p style={{ color: 'rgba(240,237,230,0.4)', fontSize: '0.75rem', marginTop: '14px' }}>
+              📧 Confirmation sent to {form.email}
+            </p>
+
+            <button style={{ ...S.submitBtn, marginTop: '16px' }} onClick={onClose}>
+              Done
+            </button>
+          </div>
+        )}
+
+      </div>
+    </div>
+  )
+}
+
+// ─── Styles ───────────────────────────────────────────────
+const S = {
+  overlay: {
+    position: 'fixed', inset: 0,
+    background: 'rgba(0,0,0,0.88)',
+    backdropFilter: 'blur(12px)',
+    zIndex: 100,
+    display: 'flex', alignItems: 'center',
+    justifyContent: 'center', padding: '16px'
+  },
+  box: {
+    background: '#1a1a1a',
+    borderRadius: '20px',
+    boxShadow: '8px 8px 20px #080808, -8px -8px 20px #2a2a2a',
+    border: '1px solid rgba(212,175,55,0.15)',
+    maxWidth: '460px', width: '100%',
+    maxHeight: '88vh', overflowY: 'auto',
+    padding: '32px 28px', position: 'relative'
+  },
+  closeBtn: {
+    position: 'absolute', top: '14px', right: '16px',
+    background: 'none', border: 'none',
+    color: '#d4af37', fontSize: '1.1rem',
+    cursor: 'pointer', zIndex: 1
+  },
+  dots: {
+    display: 'flex', gap: '8px',
+    justifyContent: 'center', marginBottom: '20px'
+  },
+  dot: {
+    height: '8px', borderRadius: '4px',
+    transition: 'all 0.3s ease'
+  },
+  badge: {
+    display: 'inline-block',
+    background: 'rgba(212,175,55,0.08)',
+    border: '1px solid rgba(212,175,55,0.25)',
+    borderRadius: '20px', padding: '3px 12px',
+    color: '#d4af37', fontSize: '0.78rem',
+    marginBottom: '18px'
+  },
+  heading: {
+    color: '#f0ede6', fontSize: '1.25rem',
+    fontWeight: 700, marginBottom: '6px'
+  },
+  sub: {
+    color: 'rgba(240,237,230,0.5)',
+    fontSize: '0.82rem', marginBottom: '18px'
+  },
+  typeCard: {
+    display: 'flex', alignItems: 'center', gap: '14px',
+    background: '#111',
+    border: '1px solid rgba(212,175,55,0.15)',
+    borderRadius: '12px', padding: '14px 16px',
+    cursor: 'pointer', marginBottom: '10px',
+    transition: 'all 0.2s ease'
+  },
+  backBtn: {
+    background: 'none', border: 'none',
+    color: 'rgba(240,237,230,0.5)',
+    fontSize: '0.82rem', cursor: 'pointer',
+    padding: 0, marginBottom: '12px',
+    fontFamily: 'Poppins'
+  },
+  submitBtn: {
+    width: '100%',
+    background: '#d4af37', color: '#0d0d0d',
+    border: 'none', borderRadius: '10px',
+    padding: '13px', fontWeight: 700,
+    fontSize: '0.95rem', cursor: 'pointer',
+    fontFamily: 'Poppins',
+    transition: 'all 0.2s ease', marginTop: '4px'
+  },
+  payBox: {
+    border: '1px solid rgba(212,175,55,0.35)',
+    borderRadius: '14px', padding: '20px',
+    background: 'rgba(212,175,55,0.03)',
+    marginBottom: '18px', textAlign: 'center'
+  },
+  upiRow: {
+    display: 'flex', alignItems: 'center',
+    justifyContent: 'space-between',
+    background: '#111', borderRadius: '8px',
+    padding: '10px 12px'
+  },
+  copyBtn: {
+    background: 'rgba(212,175,55,0.1)',
+    border: '1px solid rgba(212,175,55,0.3)',
+    borderRadius: '6px', padding: '5px 12px',
+    color: '#d4af37', fontSize: '0.78rem',
+    cursor: 'pointer', fontFamily: 'Poppins'
+  },
+  uploadLabel: {
+    display: 'block',
+    background: '#111',
+    border: '1px dashed rgba(212,175,55,0.3)',
+    borderRadius: '10px', padding: '13px',
+    color: 'rgba(240,237,230,0.55)',
+    fontSize: '0.85rem', textAlign: 'center',
+    cursor: 'pointer'
+  },
+  checkCircle: {
+    width: '70px', height: '70px',
+    border: '3px solid #d4af37',
+    borderRadius: '50%',
+    display: 'flex', alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 20px',
+    color: '#d4af37', fontSize: '2rem',
+    fontWeight: 700
+  },
+  idBox: {
+    background: '#111',
+    border: '1px solid rgba(212,175,55,0.25)',
+    borderRadius: '10px', padding: '12px 16px'
+  }
+}
+
+export default RegistrationModal
