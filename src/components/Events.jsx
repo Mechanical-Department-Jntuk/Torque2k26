@@ -87,8 +87,14 @@ const Events = ({ onRegister }) => {
                 <div className="event-card-content">
                   <h3 className="event-card-title">{event.name}</h3>
                   <p className="event-card-tagline">{event.tagline}</p>
-                  <button className="event-card-button">
-                    Know More
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRegister && onRegister(event);
+                    }}
+                    className="event-card-button"
+                  >
+                    View Details
                   </button>
                   <button
                     onClick={(e) => {
@@ -98,7 +104,7 @@ const Events = ({ onRegister }) => {
                     className="event-card-button"
                     style={{ marginTop: '8px' }}
                   >
-                    Register
+                    Register Now
                   </button>
                 </div>
               </motion.div>

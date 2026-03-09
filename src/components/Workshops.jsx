@@ -73,7 +73,13 @@ const Workshops = ({ onRegister }) => {
         </div>
 
         {/* Learn More Button */}
-        <button className="neu-button w-full text-center mt-auto">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRegister && onRegister(workshop);
+          }}
+          className="neu-button w-full text-center mt-auto"
+        >
           Learn More
         </button>
 
