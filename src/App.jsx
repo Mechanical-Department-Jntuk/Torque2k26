@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Home from './pages/Home.jsx';
 import EventDetail from './pages/EventDetail.jsx';
 import WorkshopDetail from './pages/WorkshopDetail.jsx';
+import OnsiteAdmin from './pages/OnsiteAdmin.jsx';
 import Starfield from './components/Starfield.jsx';
 import RegistrationModal from './components/RegistrationModal.jsx';
 import RegistrationClosed from './components/RegistrationClosed.jsx';
@@ -53,7 +54,7 @@ function Navigation() {
   const handleNavClick = (e, href) => {
     e.preventDefault();
     setIsMobileMenuOpen(false);
-    
+
     if (location.pathname !== '/') {
       navigate('/');
       setTimeout(() => {
@@ -219,27 +220,38 @@ function Navigation() {
 
 function App() {
   const [registrationItem, setRegistrationItem] = useState(null);
+  const [isOnsiteAdmin, setIsOnsiteAdmin] = useState(false);
+
+  const handleRegister = (item, onsite = false) => {
+    setRegistrationItem(item);
+    setIsOnsiteAdmin(onsite);
+  };
 
   return (
     <Router>
       <div className="min-h-screen font-poppins relative">
         <Starfield />
         <Navigation />
-        
+
         <motion.main
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
           <Routes>
-            <Route path="/" element={<Home onRegister={(item) => setRegistrationItem(item)} />} />
-            <Route path="/event/:id" element={<EventDetail />} />
-            <Route path="/workshop/:id" element={<WorkshopDetail />} />
+            <Route path="/" element={<Home onRegister={handleRegister} />} />
+            <Route path="/event/:id" element={<EventDetail onRegister={handleRegister} />} />
+            <Route path="/workshop/:id" element={<WorkshopDetail onRegister={handleRegister} />} />
+            <Route path="/onsite2k26" element={<OnsiteAdmin onRegister={handleRegister} />} />
           </Routes>
           {registrationItem && festInfo.registrationOpen && (
             <RegistrationModal
               item={registrationItem}
-              onClose={() => setRegistrationItem(null)}
+              showOnsite={isOnsiteAdmin}
+              onClose={() => {
+                setRegistrationItem(null);
+                setIsOnsiteAdmin(false);
+              }}
             />
           )}
           {registrationItem && !festInfo.registrationOpen && (

@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { events } from '../data/data.js';
 
-const EventDetail = () => {
+const EventDetail = ({ onRegister }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const event = events.find(e => e.id === id);
@@ -172,23 +172,12 @@ const EventDetail = () => {
           transition={{ delay: 0.7, duration: 0.6 }}
           className="text-center"
         >
-          {event.registrationLink ? (
-            <a
-              href={event.registrationLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="neu-button inline-block text-lg px-8 py-4"
-            >
-              Register Now
-            </a>
-          ) : (
-            <button
-              className="neu-button inline-block text-lg px-8 py-4 opacity-60 cursor-not-allowed"
-              disabled
-            >
-              Registration Opens Soon
-            </button>
-          )}
+          <button
+            onClick={() => onRegister && onRegister(event)}
+            className="neu-button inline-block text-lg px-8 py-4"
+          >
+            Register Now
+          </button>
         </motion.div>
       </div>
     </div>

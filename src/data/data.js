@@ -13,7 +13,7 @@ export const festInfo = {
   brochureLink: 'https://drive.google.com/file/d/1Oq5hlPsLnExh-L0_W1Fa91KBd_wzN4R0/view?usp=drive_link',
   registrationOpen: true,
   registrationOpenDate: '2026-03-14T09:00:00',
-  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbzngApzjkpuFTvplBHmBGTL5Z3M7_oUhnriEa7ycH2FN9KKgDtigqq9YcHWVpyyUJs9Dg/exec',
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxTcig1pdGvfMOkWv2B7WipM4XEQJwbaRyMt0CvAs47EkysZin-cVSXbYaFItXFganmNQ/exec',
   upiId: 'torque2k26@upi',
   upiName: 'Torque 2K26',
   upiQr: null,

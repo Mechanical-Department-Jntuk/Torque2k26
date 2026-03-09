@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { festInfo } from '../data/data.js'
 
-const RegistrationModal = ({ item, onClose }) => {
+const RegistrationModal = ({ item, onClose, showOnsite = false }) => {
 
-  const [step, setStep] = useState(1)
-  const [type, setType] = useState(null)
+  const [step, setStep] = useState(showOnsite ? 2 : 1)
+  const [type, setType] = useState(showOnsite ? 'onsite' : null)
   const [form, setForm] = useState({
     name: '', phone: '', email: '',
     branch: '', rollNo: '',
@@ -272,50 +272,62 @@ const RegistrationModal = ({ item, onClose }) => {
                 badge: '₹' + item.prices.onsite,
                 badgeColor: '#d4af37'
               }
-            ].map(opt => (
-              <div
-                key={opt.key}
-                style={S.typeCard}
-                onClick={() => { setType(opt.key); setStep(2) }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)'
-                  e.currentTarget.style.transform = 'translateX(4px)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'rgba(212,175,55,0.15)'
-                  e.currentTarget.style.transform = 'translateX(0)'
-                }}
-              >
-                <span style={{ fontSize: '1.8rem' }}>{opt.icon}</span>
-                <div style={{ flexGrow: 1 }}>
-                  <div style={{ color: '#f0ede6', fontWeight: 600, fontSize: '0.95rem' }}>
-                    {opt.title}
+            ]
+              .filter(opt => showOnsite || opt.key !== 'onsite')
+              .map(opt => (
+                <div
+                  key={opt.key}
+                  style={S.typeCard}
+                  onClick={() => { setType(opt.key); setStep(2) }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)'
+                    e.currentTarget.style.transform = 'translateX(4px)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'rgba(212,175,55,0.15)'
+                    e.currentTarget.style.transform = 'translateX(0)'
+                  }}
+                >
+                  <span style={{ fontSize: '1.8rem' }}>{opt.icon}</span>
+                  <div style={{ flexGrow: 1 }}>
+                    <div style={{ color: '#f0ede6', fontWeight: 600, fontSize: '0.95rem' }}>
+                      {opt.title}
+                    </div>
+                    <div style={{ color: 'rgba(240,237,230,0.5)', fontSize: '0.78rem', marginTop: '2px' }}>
+                      {opt.sub}
+                    </div>
                   </div>
-                  <div style={{ color: 'rgba(240,237,230,0.5)', fontSize: '0.78rem', marginTop: '2px' }}>
-                    {opt.sub}
-                  </div>
+                  <span style={{
+                    background: opt.badgeColor === '#4caf50'
+                      ? 'rgba(76,175,80,0.12)' : 'rgba(212,175,55,0.1)',
+                    border: `1px solid ${opt.badgeColor === '#4caf50'
+                      ? 'rgba(76,175,80,0.3)' : 'rgba(212,175,55,0.3)'}`,
+                    color: opt.badgeColor,
+                    borderRadius: '20px', padding: '3px 10px',
+                    fontSize: '0.78rem', fontWeight: 700,
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {opt.badge}
+                  </span>
                 </div>
-                <span style={{
-                  background: opt.badgeColor === '#4caf50'
-                    ? 'rgba(76,175,80,0.12)' : 'rgba(212,175,55,0.1)',
-                  border: `1px solid ${opt.badgeColor === '#4caf50'
-                    ? 'rgba(76,175,80,0.3)' : 'rgba(212,175,55,0.3)'}`,
-                  color: opt.badgeColor,
-                  borderRadius: '20px', padding: '3px 10px',
-                  fontSize: '0.78rem', fontWeight: 700,
-                  whiteSpace: 'nowrap'
-                }}>
-                  {opt.badge}
-                </span>
-              </div>
-            ))}
+              ))}
           </div>
         )}
 
         {/* ── STEP 2 ── */}
         {step === 2 && (
           <div>
-            <button style={S.backBtn} onClick={() => { setStep(1); setErrors({}) }}>
+            <button
+              style={S.backBtn}
+              onClick={() => {
+                if (showOnsite) {
+                  onClose();
+                } else {
+                  setStep(1);
+                  setErrors({});
+                }
+              }}
+            >
               ← Back
             </button>
             <h2 style={S.heading}>Your Details</h2>

@@ -383,6 +383,18 @@ body {
   font-style: italic;
 }
 
+.bg-gold {
+  background-color: var(--gold);
+}
+
+.bg-gold\/10 {
+  background-color: rgba(212, 175, 55, 0.1);
+}
+
+.bg-gold\/20 {
+  background-color: rgba(212, 175, 55, 0.2);
+}
+
 .text-gold {
   color: var(--gold);
 }
@@ -391,12 +403,44 @@ body {
   color: var(--text);
 }
 
-.bg-gold {
-  background-color: var(--gold);
+.text-text\/40 {
+  color: rgba(240, 237, 230, 0.4);
+}
+
+.text-text\/50 {
+  color: rgba(240, 237, 230, 0.5);
+}
+
+.text-text\/60 {
+  color: rgba(240, 237, 230, 0.6);
+}
+
+.border-gold\/20 {
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+.border-gold\/30 {
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
 .bg-surface {
   background-color: var(--surface);
+}
+
+.bg-black\/20 {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.bg-black\/40 {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
 }
 
 .rounded-full {
@@ -407,12 +451,40 @@ body {
   border-radius: 1rem;
 }
 
+.bg-blue-500\/10 {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.text-blue-400 {
+  color: #60a5fa;
+}
+
+.border-blue-500\/20 {
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.bg-purple-500\/10 {
+  background-color: rgba(168, 85, 247, 0.1);
+}
+
+.text-purple-400 {
+  color: #c084fc;
+}
+
+.border-purple-500\/20 {
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
 .overflow-hidden {
   overflow: hidden;
 }
 
 .overflow-y-auto {
   overflow-y: auto;
+}
+
+.text-\[10px\] {
+  font-size: 10px;
 }
 
 .cursor-pointer {

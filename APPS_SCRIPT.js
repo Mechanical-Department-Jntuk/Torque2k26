@@ -73,11 +73,20 @@ const SHEET_ID = '1JKZpT4sXZBKEl82yUZuJXncLXH_4umj1J-UEUHGk9CU'
  * to authorize Google Drive and Email access.
  */
 function triggerDrivePermission() {
+  // Test Drive
   const folderName = "PERMISSION_CHECK";
   const folder = DriveApp.createFolder(folderName);
   DriveApp.removeFolder(folder);
+
+  // Test Email
   MailApp.getRemainingDailyQuota();
-  console.log("Permissions check successful. You can now deploy.");
+
+  // Test Spreadsheet (MUST include this to trigger Manage permissions)
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const testSheet = ss.insertSheet("PERM_TEST");
+  ss.deleteSheet(testSheet);
+
+  console.log("All permissions check successful. You can now deploy.");
 }
 
 function doPost(e) {
@@ -123,8 +132,8 @@ function doPost(e) {
       }
     }
 
-    // Match sheet layout: Timestamp | RegID | Category | Item | Type | Name | Phone | Email | College | RollNo | YearBranch | Amount | PaymentMethod | TransactionID | Status | ScreenshotLink | VerifiedBy
-    master.appendRow([
+    // --- Data Row to append ---
+    const rowContent = [
       new Date(),
       registrationId,
       data.category,
@@ -138,15 +147,52 @@ function doPost(e) {
       data.branch || data.yearBranch || '-',
       data.amountDue,
       data.paymentMethod,
-      data.transactionId,
-      data.paymentStatus,
+      data.transactionId || '-',
+      data.paymentStatus || 'PENDING',
       screenshotUrl,
-      '-'
-    ])
+      '-' // VerifiedBy
+    ]
 
-    sendParticipantEmail(data, registrationId)
-    sendCoordinatorEmail(data, registrationId)
+    // 1. Append to MASTER
+    master.appendRow(rowContent);
 
+    // 2. Append to INDIVIDUAL sheet (Event/Workshop name)
+    try {
+      if (data.itemName) {
+        // Sanitize name: remove [ ] ? * / \ : and limit length
+        const sanitizedName = data.itemName.toString()
+          .replace(/[\[\]\?\*\/\:\\]/g, '')
+          .substring(0, 30);
+
+        let individualSheet = ss.getSheetByName(sanitizedName);
+
+        if (!individualSheet) {
+          individualSheet = ss.insertSheet(sanitizedName);
+          // Add headers to new sheet
+          individualSheet.appendRow([
+            "Timestamp", "ID", "Category", "Event/Workshop", "Type",
+            "Name", "Phone", "Email", "College", "Roll No",
+            "Branch/Year", "Amount", "Method", "Transaction ID",
+            "Status", "Screenshot", "Verified By"
+          ]);
+          // Format headers
+          individualSheet.getRange(1, 1, 1, 17).setFontWeight("bold").setBackground("#f3f3f3");
+          individualSheet.setFrozenRows(1);
+        }
+
+        individualSheet.appendRow(rowContent);
+      }
+    } catch (e) {
+      console.error("Individual sheet update failed: " + e.message);
+      // Don't throw error here so MASTER still records the data
+    }
+
+    try {
+      sendParticipantEmail(data, registrationId)
+      sendCoordinatorEmail(data, registrationId)
+    } catch (e) {
+      console.error("Email failed: " + e.message)
+    }
     return ContentService
       .createTextOutput(JSON.stringify({
         result: 'success',
@@ -241,4 +287,53 @@ function sendCoordinatorEmail(data, registrationId) {
   } catch (err) {
     Logger.log('Coordinator email failed: ' + err.message)
   }
+}
+
+/**
+ * RUN THIS ONCE to pre-create all event and workshop tabs
+ * in the spreadsheet with headers.
+ */
+function initializeAllSheets() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+
+  // List from your data.js
+  const names = [
+    "Robotics",
+    "Chess Monarch",
+    "Project Expo",
+    "Bridge Building",
+    "Lathe Master",
+    "Robo Race",
+    "Design Freak",
+    "Slide Plain",
+    "Casting Crown",
+    "Engine Montage",
+    "Quiz",
+    "Rhythmic Fusion"
+  ];
+
+  const headers = [
+    "Timestamp", "ID", "Category", "Event/Workshop", "Type",
+    "Name", "Phone", "Email", "College", "Roll No",
+    "Branch/Year", "Amount", "Method", "Transaction ID",
+    "Status", "Screenshot", "Verified By"
+  ];
+
+  names.forEach(name => {
+    const sanitizedName = name.toString().replace(/[\[\]\?\*\/\:\\]/g, '').substring(0, 30);
+    let sheet = ss.getSheetByName(sanitizedName);
+
+    if (!sheet) {
+      sheet = ss.insertSheet(sanitizedName);
+      sheet.appendRow(headers);
+      // Format headers
+      sheet.getRange(1, 1, 1, 17).setFontWeight("bold").setBackground("#f3f3f3");
+      sheet.setFrozenRows(1);
+      console.log("Created sheet: " + sanitizedName);
+    } else {
+      console.log("Sheet already exists: " + sanitizedName);
+    }
+  });
+
+  console.log("All sheets initialized successfully.");
 }
