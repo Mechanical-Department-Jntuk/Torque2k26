@@ -13,14 +13,14 @@ export const festInfo = {
   brochureLink: 'https://drive.google.com/file/d/1Oq5hlPsLnExh-L0_W1Fa91KBd_wzN4R0/view?usp=drive_link',
   registrationOpen: true,
   registrationOpenDate: '2026-03-14T09:00:00',
-  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbw6gtfIMvhDvUkN-F5dS69U3eXt_NtjUqFvmZlkR3Efr53L_xnuBctxGMANgOQQOVQT8g/exec',
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbzngApzjkpuFTvplBHmBGTL5Z3M7_oUhnriEa7ycH2FN9KKgDtigqq9YcHWVpyyUJs9Dg/exec',
   upiId: 'torque2k26@upi',
   upiName: 'Torque 2K26',
   upiQr: null,
   socialLinks: {
     twitter: 'https://x.com/TORQUE_2K25?t=ILgS1XjD_ygM9mzeEA1mbQ&s=08',
-    instagram: 'https://www.instagram.com/torque_2k25?igsh=MTdmNjFkZ2l6c2c4aw==',
-    youtube: 'https://youtube.com/@torque_jntuk?si=nWCpxwGJb8z7qSG6'
+    instagram: 'https://www.instagram.com/torque_2k26?igsh=OTljbjU5bHluOWto',
+    youtube: 'https://youtube.com/@torque_2k26?si=ORxbhNqQoHCZqgKK'
   },
   location: {
     address: 'Department of Mechanical Engineering',

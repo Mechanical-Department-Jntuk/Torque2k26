@@ -22,6 +22,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Add scroll padding to account for fixed navbar */
+  scroll-padding-top: 100px;
 }
 
 body {
@@ -807,17 +809,23 @@ a:focus {
 /* Section Visual Rhythm */
 .section-divider {
   height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--gold),
-    transparent
-  );
+  background: linear-gradient(to right,
+      transparent,
+      var(--gold),
+      transparent);
   opacity: 0.3;
   margin: 0;
 }
 
 /* Section Backgrounds */
+#about,
+#workshops,
+#events,
+#gallery,
+#contact {
+  scroll-margin-top: 100px;
+}
+
 #about {
   background: var(--bg);
   position: relative;
@@ -879,12 +887,10 @@ section {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.05),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent);
   transition: 0.5s;
 }
 
@@ -911,7 +917,8 @@ section {
 .events-carousel-container {
   display: flex;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
+  /* Changed to visible to prevent cutting off buttons */
   width: 100%;
   position: relative;
   justify-content: flex-start;
@@ -944,7 +951,7 @@ section {
 .event-card-carousel {
   position: relative;
   width: 300px;
-  height: 400px;
+  min-height: 420px;
   border-radius: 15px;
   overflow: hidden;
   cursor: pointer;
@@ -987,7 +994,7 @@ section {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 200px;
+  min-height: 220px;
 }
 
 .event-card-title {
@@ -1010,7 +1017,7 @@ section {
   padding: 10px 20px;
   color: var(--gold);
   font-weight: 600;
-  box-shadow: 
+  box-shadow:
     4px 4px 8px var(--shadow-dark),
     -4px -4px 8px var(--shadow-light);
   border: 1px solid rgba(212, 175, 55, 0.2);
@@ -1021,7 +1028,7 @@ section {
 }
 
 .event-card-button:hover {
-  box-shadow: 
+  box-shadow:
     2px 2px 4px var(--shadow-dark),
     -2px -2px 4px var(--shadow-light);
   transform: translateY(-2px);
@@ -1118,8 +1125,13 @@ section {
   }
 
   @keyframes events-scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(calc(-300px * 12 - 240px)); }
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(calc(-300px * 12 - 240px));
+    }
   }
 }
 

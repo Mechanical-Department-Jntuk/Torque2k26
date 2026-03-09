@@ -21,7 +21,7 @@ const WorkshopDetail = () => {
   }
 
   return (
-    <div className="min-h-screen py-20 px-4">
+    <div className="min-h-screen pt-32 pb-20 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Workshop Image - Full Width */}
         <motion.div

@@ -21,7 +21,7 @@ const EventDetail = () => {
   }
 
   return (
-    <div className="min-h-screen py-20 px-4">
+    <div className="min-h-screen pt-32 pb-20 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Event Image - Full Width */}
         <motion.div

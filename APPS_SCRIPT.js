@@ -67,6 +67,19 @@ TROUBLESHOOTING:
 
 const SHEET_ID = '1JKZpT4sXZBKEl82yUZuJXncLXH_4umj1J-UEUHGk9CU'
 
+/**
+ * RUN THIS MANUALLY FIRST!
+ * Click the 'Run' button choosing this function in the top toolbar
+ * to authorize Google Drive and Email access.
+ */
+function triggerDrivePermission() {
+  const folderName = "PERMISSION_CHECK";
+  const folder = DriveApp.createFolder(folderName);
+  DriveApp.removeFolder(folder);
+  MailApp.getRemainingDailyQuota();
+  console.log("Permissions check successful. You can now deploy.");
+}
+
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents)
@@ -85,7 +98,32 @@ function doPost(e) {
     const registrationId = data.registrationId ||
       ('TRQ26-' + prefix + '-' + count)
 
-    // Match sheet layout: Timestamp | RegID | Category | Item | Type | Name | Phone | Email | College | RollNo | YearBranch ...
+    // Handle screenshot if provided
+    let screenshotUrl = '-';
+    if (data.screenshotData) {
+      try {
+        const folderName = "Torque_2K26_Screenshots";
+        let folder;
+        const folders = DriveApp.getFoldersByName(folderName);
+        if (folders.hasNext()) {
+          folder = folders.next();
+        } else {
+          folder = DriveApp.createFolder(folderName);
+        }
+
+        const contentType = data.screenshotData.substring(5, data.screenshotData.indexOf(';'));
+        const bytes = Utilities.base64Decode(data.screenshotData.split(',')[1]);
+        const blob = Utilities.newBlob(bytes, contentType, data.screenshotName || ('screenshot_' + registrationId + '.png'));
+        const file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        screenshotUrl = file.getUrl();
+      } catch (e) {
+        console.error("Screenshot upload failed: " + e.message);
+        screenshotUrl = "ERROR: " + e.message + " (Run trigger function)";
+      }
+    }
+
+    // Match sheet layout: Timestamp | RegID | Category | Item | Type | Name | Phone | Email | College | RollNo | YearBranch | Amount | PaymentMethod | TransactionID | Status | ScreenshotLink | VerifiedBy
     master.appendRow([
       new Date(),
       registrationId,
@@ -97,12 +135,12 @@ function doPost(e) {
       data.email,
       data.college,
       data.rollNo,
-      data.branch || data.yearBranch || '-', // Handle both field names for safety
+      data.branch || data.yearBranch || '-',
       data.amountDue,
       data.paymentMethod,
       data.transactionId,
       data.paymentStatus,
-      '-',
+      screenshotUrl,
       '-'
     ])
 
