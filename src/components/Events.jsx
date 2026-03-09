@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { events } from '../data/data.js';
 import { useRef } from 'react';
 
-const Events = () => {
+const Events = ({ onRegister }) => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
 
@@ -89,6 +89,16 @@ const Events = () => {
                   <p className="event-card-tagline">{event.tagline}</p>
                   <button className="event-card-button">
                     Know More
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRegister && onRegister(event);
+                    }}
+                    className="event-card-button"
+                    style={{ marginTop: '8px' }}
+                  >
+                    Register
                   </button>
                 </div>
               </motion.div>

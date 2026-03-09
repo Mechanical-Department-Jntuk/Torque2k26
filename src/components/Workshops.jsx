@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { workshops } from '../data/data.js';
 
-const Workshops = () => {
+const Workshops = ({ onRegister }) => {
   const navigate = useNavigate();
 
   const containerVariants = {
@@ -75,6 +75,17 @@ const Workshops = () => {
         {/* Learn More Button */}
         <button className="neu-button w-full text-center mt-auto">
           Learn More
+        </button>
+
+        {/* Register Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRegister && onRegister(workshop);
+          }}
+          className="neu-button w-full text-center mt-2 bg-gold/10 text-gold border border-gold/30 hover:bg-gold/20"
+        >
+          Register
         </button>
       </div>
     </motion.div>
