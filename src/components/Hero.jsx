@@ -1,14 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { festInfo } from '../data/data.js';
 
-
-// ============================================
-// COUNTDOWN TIMER - TEMPORARILY HIDDEN
-// ============================================
-// Uncomment this section when you want to show the countdown timer
-
-/*
 // Countdown Timer Component
 const CountdownTimer = ({ targetDate }) => {
   const [timeLeft, setTimeLeft] = useState({
@@ -17,18 +10,23 @@ const CountdownTimer = ({ targetDate }) => {
     minutes: 0,
     seconds: 0
   });
+  const [hasEnded, setHasEnded] = useState(false);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
       const difference = new Date(targetDate) - new Date();
 
       if (difference > 0) {
+        setHasEnded(false);
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
           hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
           minutes: Math.floor((difference / 1000 / 60) % 60),
           seconds: Math.floor((difference / 1000) % 60)
         });
+      } else {
+        setHasEnded(true);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
 
@@ -49,10 +47,11 @@ const CountdownTimer = ({ targetDate }) => {
         className="neu-card px-6 py-4"
         style={{ minWidth: '90px' }}
       >
-        <div 
-          className="font-bold text-gold mb-1 font-mono"
-          style={{ 
+        <div
+          className="font-bold text-gold mb-1"
+          style={{
             fontSize: '2.5rem',
+            fontFamily: "'Poppins', monospace",
             textShadow: '0 0 15px rgba(212,175,55,0.3)'
           }}
         >
@@ -65,6 +64,25 @@ const CountdownTimer = ({ targetDate }) => {
     </motion.div>
   );
 
+  if (hasEnded) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+        className="text-center"
+      >
+        <div
+          className="text-3xl md:text-5xl font-bold text-gold mb-2"
+          style={{ textShadow: '0 0 30px rgba(212,175,55,0.5)' }}
+        >
+          🎉 Welcome to TORQUE 2K26! 🎉
+        </div>
+        <p className="text-text/70 text-lg">The fest is live — let the innovation begin!</p>
+      </motion.div>
+    );
+  }
+
   return (
     <div className="flex gap-3 flex-wrap justify-center">
       <TimeCard value={timeLeft.days} label="Days" />
@@ -74,11 +92,6 @@ const CountdownTimer = ({ targetDate }) => {
     </div>
   );
 };
-*/
-
-// ============================================
-// END COUNTDOWN TIMER
-// ============================================
 
 // Main Hero Component
 const Hero = () => {
@@ -168,16 +181,15 @@ const Hero = () => {
             {festInfo.title}
           </motion.h1>
 
-          {/* Coming Soon Banner - Mechanical Industrial Design */}
+          {/* Date Display - Flip Card Style */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.6 }}
             className="mb-12 flex flex-col items-center gap-6"
           >
-            {/* Date Display - Flip Card Style */}
             <div className="flex gap-5 items-center justify-center flex-wrap">
-              {/* 15 March */}
+              {/* 26 March */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -276,6 +288,15 @@ const Hero = () => {
                 <label style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>March</label>
               </motion.div>
             </div>
+          </motion.div>
+
+          {/* Countdown Timer */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.8, duration: 0.6 }}
+          >
+            <CountdownTimer targetDate="2026-03-26T09:00:00+05:30" />
           </motion.div>
         </motion.div>
       </div>

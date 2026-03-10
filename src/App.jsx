@@ -15,7 +15,8 @@ const navItems = [
   { label: 'Workshops', href: '#workshops' },
   { label: 'Events', href: '#events' },
   { label: 'Gallery', href: '#gallery' },
-  { label: 'Contact', href: '#contact' }
+  { label: 'Contact', href: '#contact' },
+  { label: 'Location', href: '#location' }
 ];
 
 function Navigation() {
@@ -89,23 +90,39 @@ function Navigation() {
       >
         <div className="max-w-7xl mx-auto neu-card backdrop-blur-xl bg-surface/80 px-6 py-3">
           <div className="flex items-center justify-between">
-            {/* Logo */}
-            <a
-              href="/"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="flex items-center cursor-pointer"
-            >
-              <img
-                src="/torque.png"
-                alt="Torque 2K26 Logo"
-                className="h-10 md:h-12"
-                style={{ background: 'transparent' }}
-              />
-            </a>
+            {/* Left side: Logo & Poster */}
+            <div className="flex items-center gap-6">
+              {/* Logo */}
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate('/');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="flex items-center cursor-pointer"
+              >
+                <img
+                  src="/torque.png"
+                  alt="Torque 2K26 Logo"
+                  className="h-10 md:h-12"
+                  style={{ background: 'transparent' }}
+                />
+              </a>
+
+              {/* Poster Button */}
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href={festInfo.brochureLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ whiteSpace: 'nowrap' }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gold/30 bg-gold/5 text-gold hover:bg-gold hover:text-surface transition-all duration-300 text-xs font-bold"
+              >
+                View Poster
+              </motion.a>
+            </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">

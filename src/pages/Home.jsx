@@ -5,6 +5,7 @@ import Events from '../components/Events.jsx';
 import Workshops from '../components/Workshops.jsx';
 import Gallery from '../components/Gallery.jsx';
 import Contact from '../components/Contact.jsx';
+import Footer from '../components/Footer.jsx';
 
 const Home = ({ onRegister }) => {
   return (
@@ -20,6 +21,7 @@ const Home = ({ onRegister }) => {
       <Gallery />
       <div className="section-divider" />
       <Contact />
+      <Footer />
     </>
   );
 };

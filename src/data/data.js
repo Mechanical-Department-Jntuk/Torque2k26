@@ -10,7 +10,7 @@ export const festInfo = {
   tagline: 'COMING SOON',
   festDate: '2026-04-15T09:00:00',
   email: '2026.torque@gmail.com',
-  brochureLink: 'https://drive.google.com/file/d/1Oq5hlPsLnExh-L0_W1Fa91KBd_wzN4R0/view?usp=drive_link',
+  brochureLink: '/images/poster2k26.jpeg',
   registrationOpen: true,
   registrationOpenDate: '2026-03-14T09:00:00',
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxldVM2j3Qr_5WZKfAZgaC-45Hdno9lMLS6v7Kry67KCIRQEQnrWnLquSCAv8yCtXJ4pg/exec',
