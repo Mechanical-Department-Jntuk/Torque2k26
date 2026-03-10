@@ -104,7 +104,7 @@ const Gallery = () => {
         </motion.div>
 
         {/* Horizontal Scrolling Gallery */}
-        <div 
+        <div
           className="gallery-container"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}

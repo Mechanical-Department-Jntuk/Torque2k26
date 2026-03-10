@@ -65,7 +65,7 @@ TROUBLESHOOTING:
 • Check spam folder if emails not received
 */
 
-const SHEET_ID = '1JKZpT4sXZBKEl82yUZuJXncLXH_4umj1J-UEUHGk9CU'
+const SHEET_ID = '1ggkj9GBIr7hoXb9gyPA-MKi73nfOHkLn4sOjRN4PxoU'
 
 /**
  * RUN THIS MANUALLY FIRST!
@@ -107,30 +107,8 @@ function doPost(e) {
     const registrationId = data.registrationId ||
       ('TRQ26-' + prefix + '-' + count)
 
-    // Handle screenshot if provided
+    // Screenshots disabled
     let screenshotUrl = '-';
-    if (data.screenshotData) {
-      try {
-        const folderName = "Torque_2K26_Screenshots";
-        let folder;
-        const folders = DriveApp.getFoldersByName(folderName);
-        if (folders.hasNext()) {
-          folder = folders.next();
-        } else {
-          folder = DriveApp.createFolder(folderName);
-        }
-
-        const contentType = data.screenshotData.substring(5, data.screenshotData.indexOf(';'));
-        const bytes = Utilities.base64Decode(data.screenshotData.split(',')[1]);
-        const blob = Utilities.newBlob(bytes, contentType, data.screenshotName || ('screenshot_' + registrationId + '.png'));
-        const file = folder.createFile(blob);
-        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-        screenshotUrl = file.getUrl();
-      } catch (e) {
-        console.error("Screenshot upload failed: " + e.message);
-        screenshotUrl = "ERROR: " + e.message + " (Run trigger function)";
-      }
-    }
 
     // --- Data Row to append ---
     const rowContent = [
@@ -189,7 +167,6 @@ function doPost(e) {
 
     try {
       sendParticipantEmail(data, registrationId)
-      sendCoordinatorEmail(data, registrationId)
     } catch (e) {
       console.error("Email failed: " + e.message)
     }
@@ -249,45 +226,6 @@ function sendParticipantEmail(data, registrationId) {
   }
 }
 
-function sendCoordinatorEmail(data, registrationId) {
-  try {
-    const coordinatorMap = {
-      'Chess Monarch': 'torque2025@gmail.com',
-      'Project Expo': 'torque2025@gmail.com',
-      'Bridge Building': 'torque2025@gmail.com',
-      'Lathe Master': 'torque2025@gmail.com',
-      'Robo Race': 'torque2025@gmail.com',
-      'Design Freak': 'torque2025@gmail.com',
-      'Slide Plain': 'torque2025@gmail.com',
-      'Casting Crown': 'torque2025@gmail.com',
-      'Engine Montage': 'torque2025@gmail.com',
-      'Quiz': 'torque2025@gmail.com',
-      'Rhythmic Fusion': 'torque2025@gmail.com',
-      'Robotics': 'torque2025@gmail.com'
-      // Add more events/workshops as needed
-    }
-
-    const coordinatorEmail = coordinatorMap[data.itemName]
-    if (!coordinatorEmail) return
-
-    MailApp.sendEmail({
-      to: coordinatorEmail,
-      subject: '[Torque 2K26] New Registration — ' + data.itemName,
-      body:
-        'New registration received.\n\n' +
-        'ID    : ' + registrationId + '\n' +
-        'Name  : ' + data.name + '\n' +
-        'Phone : ' + data.phone + '\n' +
-        'Email : ' + data.email + '\n' +
-        'Type  : ' + data.registrationType + '\n' +
-        'Amount: ' + (data.amountDue == 0 ? 'FREE' : '₹' + data.amountDue) + '\n' +
-        'Status: ' + data.paymentStatus + '\n' +
-        (data.transactionId !== '-' ? 'UTR   : ' + data.transactionId + '\n' : '')
-    })
-  } catch (err) {
-    Logger.log('Coordinator email failed: ' + err.message)
-  }
-}
 
 /**
  * RUN THIS ONCE to pre-create all event and workshop tabs

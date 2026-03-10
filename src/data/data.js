@@ -9,16 +9,16 @@ export const festInfo = {
   department: 'Department of Mechanical Engineering',
   tagline: 'COMING SOON',
   festDate: '2026-04-15T09:00:00',
-  email: 'torque2k26@gmail.com',
+  email: '2026.torque@gmail.com',
   brochureLink: 'https://drive.google.com/file/d/1Oq5hlPsLnExh-L0_W1Fa91KBd_wzN4R0/view?usp=drive_link',
   registrationOpen: true,
   registrationOpenDate: '2026-03-14T09:00:00',
-  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxTcig1pdGvfMOkWv2B7WipM4XEQJwbaRyMt0CvAs47EkysZin-cVSXbYaFItXFganmNQ/exec',
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxldVM2j3Qr_5WZKfAZgaC-45Hdno9lMLS6v7Kry67KCIRQEQnrWnLquSCAv8yCtXJ4pg/exec',
   upiId: 'torque2k26@upi',
   upiName: 'Torque 2K26',
   upiQr: null,
   socialLinks: {
-    twitter: 'https://x.com/TORQUE_2K25?t=ILgS1XjD_ygM9mzeEA1mbQ&s=08',
+    twitter: 'https://x.com/TORQUE_2K26',
     instagram: 'https://www.instagram.com/torque_2k26?igsh=OTljbjU5bHluOWto',
     youtube: 'https://youtube.com/@torque_2k26?si=ORxbhNqQoHCZqgKK'
   },
@@ -718,7 +718,7 @@ export const teamMembers = [
     image: '/images/cordinators/drvvaraprased.jpeg',
     category: 'faculty'
   },
-  
+
 
 
   // Added from previous list

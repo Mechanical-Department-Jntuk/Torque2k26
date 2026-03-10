@@ -9,8 +9,7 @@ const RegistrationModal = ({ item, onClose, showOnsite = false }) => {
     name: '', phone: '', email: '',
     branch: '', rollNo: '',
     college: '', transactionId: '',
-    paymentMethod: '', screenshot: null,
-    screenshotBase64: ''
+    paymentMethod: ''
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -40,62 +39,7 @@ const RegistrationModal = ({ item, onClose, showOnsite = false }) => {
     setErrors(e => ({ ...e, [field]: '' }))
   }
 
-  const compressImage = (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = (event) => {
-        const img = new Image()
-        img.src = event.target.result
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          let width = img.width
-          let height = img.height
 
-          // Max dimension 1200px
-          const MAX_SIZE = 1200
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height *= MAX_SIZE / width
-              width = MAX_SIZE
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width *= MAX_SIZE / height
-              height = MAX_SIZE
-            }
-          }
-
-          canvas.width = width
-          canvas.height = height
-          const ctx = canvas.getContext('2d')
-          ctx.drawImage(img, 0, 0, width, height)
-
-          // Export as JPEG with 0.6 quality for small payload
-          resolve(canvas.toDataURL('image/jpeg', 0.6))
-        }
-      }
-    })
-  }
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-
-    setLoading(true) // Show loading while compressing
-    try {
-      const compressedBase64 = await compressImage(file)
-      setForm(f => ({
-        ...f,
-        screenshot: file,
-        screenshotBase64: compressedBase64
-      }))
-    } catch (err) {
-      setErrors({ proof: 'Failed to process image' })
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // ─── Validation ────────────────────────────────────────
   const validate = () => {
@@ -118,8 +62,8 @@ const RegistrationModal = ({ item, onClose, showOnsite = false }) => {
   }
 
   const validatePayment = () => {
-    if (!form.transactionId.trim() && !form.screenshot) {
-      setErrors({ proof: 'Provide Transaction ID or upload screenshot' })
+    if (!form.transactionId.trim()) {
+      setErrors({ proof: 'Transaction ID (UTR) is required' })
       return false
     }
     return true
@@ -156,8 +100,6 @@ const RegistrationModal = ({ item, onClose, showOnsite = false }) => {
         : type === 'internal' ? 'UPI'
           : type === 'external' ? 'UPI'
             : form.paymentMethod,
-      screenshotData: form.screenshotBase64,
-      screenshotName: form.screenshot ? form.screenshot.name : '',
       paymentStatus: type === 'internal' && finalPrice === 0 ? 'WAIVED'
         : type === 'internal' ? 'PENDING VERIFICATION'
           : type === 'external' ? 'PENDING VERIFICATION'
@@ -558,27 +500,7 @@ const RegistrationModal = ({ item, onClose, showOnsite = false }) => {
               />
             </div>
 
-            <div style={{ textAlign: 'center', color: 'rgba(240,237,230,0.35)', fontSize: '0.8rem', margin: '4px 0 10px' }}>
-              — or —
-            </div>
 
-            <div style={fieldWrap}>
-              <input
-                type="file"
-                accept="image/*"
-                id="screenshot"
-                style={{ display: 'none' }}
-                onChange={handleFileUpload}
-              />
-              <label htmlFor="screenshot" style={S.uploadLabel}>
-                📎 Upload Payment Screenshot (required)
-              </label>
-              {form.screenshot && (
-                <p style={{ color: '#d4af37', fontSize: '0.78rem', marginTop: '6px' }}>
-                  ✓ {form.screenshot.name}
-                </p>
-              )}
-            </div>
 
             {errors.proof && <p style={errorStyle}>{errors.proof}</p>}
             {submitError && <p style={{ color: '#ff6b6b', fontSize: '0.82rem', marginBottom: '10px' }}>{submitError}</p>}
