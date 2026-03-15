@@ -265,14 +265,6 @@ export const events = [
           {
             "label": "Time Control",
             "value": "15 minutes (No increment)"
-          },
-          {
-            "label": "Date",
-            "value": "26-03-2026"
-          },
-          {
-            "label": "Entry Fee",
-            "value": "Rs 250/-"
           }
         ]
       },
@@ -298,7 +290,6 @@ export const events = [
         "content": [
           "Create a Lichess account if you don't already have one.",
           "Register for the tournament by clicking on the \"Register Now\" button above or scanning the QR code on the official Torque poster.",
-          "Pay the entry fee of Rs 250/- through the provided payment methods.",
           "Make sure to be online and ready to play at the scheduled start time for each round."
         ]
       }
