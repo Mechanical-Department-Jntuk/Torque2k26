@@ -8,7 +8,7 @@ export const festInfo = {
   college: 'University College of Engineering Kakinada',
   department: 'Department of Mechanical Engineering',
   tagline: 'COMING SOON',
-  festDate: '2026-04-15T09:00:00',
+  festDate: '2026-03-26T09:00:00',
   email: '2026.torque@gmail.com',
   brochureLink: '/images/poster2k26.jpeg',
   registrationOpen: true,
