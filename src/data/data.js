@@ -768,15 +768,6 @@ export const teamMembers = [
 
 export const galleryImages = [
   '/images/t1.webp',
-  '/images/t2.webp',
-  '/images/t4.webp',
-  '/images/t5.webp',
-  '/images/t6.webp',
-  '/images/t7.webp',
-  '/images/t8.webp',
-  '/images/t9.webp',
-  '/images/t10.webp',
-  '/images/t11.webp',
   '/images/te.webp',
   '/images/gallery/g3.webp',
   '/images/gallery/g4.webp',
