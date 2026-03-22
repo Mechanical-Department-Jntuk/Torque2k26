@@ -2449,6 +2449,7 @@ section {
   line-height: 1.55;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2986,4 +2987,102 @@ section {
     width: 100%;
     text-align: center;
   }
+}
+
+/* Sponsors Marquee */
+.sponsors-tray {
+  position: relative;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: 20px;
+  padding: 30px 0;
+  box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.8),
+              inset 0 -8px 16px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  display: flex;
+}
+
+.sponsors-fade-left,
+.sponsors-fade-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 15%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.sponsors-fade-left {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+
+.sponsors-fade-right {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+
+.sponsors-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 60px;
+  animation: scroll-sponsors 20s linear infinite;
+  padding: 0 30px;
+}
+
+.sponsors-track:hover {
+  animation-play-state: paused;
+}
+
+.sponsor-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 35px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.05);
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.sponsor-logo-wrap:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(212, 175, 55, 0.2);
+  transform: translateY(-5px);
+}
+
+.sponsor-logo {
+  height: 60px;
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
+  filter: brightness(1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sponsor-logo-wrap:hover .sponsor-logo {
+  filter: brightness(1.15) drop-shadow(0 4px 12px rgba(212, 175, 55, 0.25));
+  transform: scale(1.05);
+}
+
+.sponsor-name {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.sponsor-logo-wrap:hover .sponsor-name {
+  opacity: 1;
+}
+
+@keyframes scroll-sponsors {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 30px)); }
 }

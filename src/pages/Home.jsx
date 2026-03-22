@@ -5,6 +5,7 @@ import Workshops from '../components/Workshops.jsx';
 import Gallery from '../components/Gallery.jsx';
 import Contact from '../components/Contact.jsx';
 import Footer from '../components/Footer.jsx';
+import Sponsors from '../components/Sponsors.jsx';
 
 const Home = ({ onRegister }) => (
   <>
@@ -17,6 +18,8 @@ const Home = ({ onRegister }) => (
     <Events />
     <div className="section-divider" />
     <Gallery />
+    <div className="section-divider" />
+    <Sponsors />
     <div className="section-divider" />
     <Contact />
     <Footer />

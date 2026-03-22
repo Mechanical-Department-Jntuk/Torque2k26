@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import { sponsors } from '../data/data.js';
 
-// Double the array so the CSS marquee loops seamlessly
-const track = [...sponsors, ...sponsors];
+// Repeat the array multiple times so the CSS marquee loops seamlessly on large screens
+const track = [...Array(10)].flatMap(() => sponsors);
 
 const Sponsors = () => (
   <section id="sponsors" className="py-16 px-4 overflow-hidden">

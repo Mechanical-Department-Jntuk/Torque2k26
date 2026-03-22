@@ -676,40 +676,12 @@ export const events = [
 
 export const sponsors = [
   {
-    name: 'Ministry of Education',
-    logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-a6e3i5hUAV_sH8JWtwGeMLEnha6giIPWag&s'
+    name: 'State Bank of India (SBI)',
+    logo: '/images/sponsors/sponsor1.jpeg'
   },
   {
-    name: 'ONGC',
-    logo: 'https://logodix.com/logo/1686770.png'
-  },
-  {
-    name: 'Reliance',
-    logo: 'https://rilstaticasset.akamaized.net/sites/default/files/2023-02/L.3.jpg'
-  },
-  {
-    name: 'Kakinada Seaports',
-    logo: 'https://raw.githubusercontent.com/Mechanical-Department-Jntuk/Torque/refs/heads/main/images/ksp%20log.jpg'
-  },
-  {
-    name: 'SBI',
-    logo: 'https://static.vecteezy.com/system/resources/previews/020/335/992/non_2x/sbi-logo-sbi-icon-free-free-vector.jpg'
-  },
-  {
-    name: 'KTM',
-    logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3Bq1u9Wb_eHzB_Jp-DKUvwOFChCi5qfuI2Q&s'
-  },
-  {
-    name: 'Hyundai',
-    logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgh48xdx_GoagMzp0anpy_Z528DVew8SFV-Q&s'
-  },
-  {
-    name: 'Harley Davidson',
-    logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0AUpQNyiUB3QuC6pt-_X-RV4BqDGQRc5O_Q&s'
-  },
-  {
-    name: 'Institution of Engineers',
-    logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTAItfeRU8se5e76cLSYaHBNHfwfjGjlmJLBw&s'
+    name: 'C7',
+    logo: '/images/sponsors/sponsor2.jpeg'
   }
 ];
 
