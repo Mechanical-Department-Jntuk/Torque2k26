@@ -1,92 +1,140 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { galleryImages } from '../data/data.js';
 
-const Gallery = () => {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
+const Lightbox = ({ image, currentIndex, total, onClose, onNext, onPrev }) => {
+  // Lock body scroll when lightbox is open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
-  const openLightbox = (image, index) => {
-    setSelectedImage(image);
-    setCurrentIndex(index);
-  };
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'ArrowRight') onNext();
+      else if (e.key === 'ArrowLeft') onPrev();
+      else if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onNext, onPrev, onClose]);
 
-  const closeLightbox = () => {
-    setSelectedImage(null);
-  };
-
-  const navigateImage = (direction) => {
-    let newIndex;
-    if (direction === 'next') {
-      newIndex = (currentIndex + 1) % galleryImages.length;
-    } else {
-      newIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
-    }
-    setCurrentIndex(newIndex);
-    setSelectedImage(galleryImages[newIndex]);
-  };
-
-  const Lightbox = ({ image, onClose, onNext, onPrev }) => (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
       onClick={onClose}
-      className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(6px)', padding: '16px' }}
     >
+      {/* Close button */}
       <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-gold hover:text-yellow-400 transition-colors z-10"
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
         aria-label="Close lightbox"
+        style={{
+          position: 'fixed', top: '16px', right: '16px', zIndex: 10000,
+          background: 'rgba(30,30,30,0.9)', border: '1px solid rgba(212,175,55,0.5)',
+          borderRadius: '50%', width: '44px', height: '44px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', color: '#FFD700', transition: 'all 0.2s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.2)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(30,30,30,0.9)'}
       >
-        <svg className="w-10 h-10" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M6 18L18 6M6 6l12 12" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
 
+      {/* Prev button */}
       <button
         onClick={(e) => { e.stopPropagation(); onPrev(); }}
-        className="absolute left-4 top-1/2 -translate-y-1/2 text-gold hover:text-yellow-400 transition-colors neu-button p-4"
         aria-label="Previous image"
+        style={{
+          position: 'fixed', left: '16px', top: '50%', transform: 'translateY(-50%)', zIndex: 10000,
+          background: 'rgba(30,30,30,0.9)', border: '1px solid rgba(212,175,55,0.4)',
+          borderRadius: '50%', width: '48px', height: '48px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', color: '#FFD700',
+        }}
       >
-        <svg className="w-8 h-8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M15 19l-7-7 7-7" />
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
 
+      {/* Image */}
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.8, opacity: 0 }}
+        exit={{ scale: 0.85, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="max-w-6xl max-h-[90vh] w-full"
+        style={{ maxWidth: '90vw', maxHeight: '85vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
-        <img src={image} alt="Gallery" className="w-full h-full object-contain rounded-2xl shadow-2xl" />
+        <img
+          src={image}
+          alt={`Gallery ${currentIndex + 1}`}
+          style={{ maxWidth: '100%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 0 60px rgba(0,0,0,0.8)' }}
+        />
       </motion.div>
 
+      {/* Next button */}
       <button
         onClick={(e) => { e.stopPropagation(); onNext(); }}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-gold hover:text-yellow-400 transition-colors neu-button p-4"
         aria-label="Next image"
+        style={{
+          position: 'fixed', right: '16px', top: '50%', transform: 'translateY(-50%)', zIndex: 10000,
+          background: 'rgba(30,30,30,0.9)', border: '1px solid rgba(212,175,55,0.4)',
+          borderRadius: '50%', width: '48px', height: '48px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', color: '#FFD700',
+        }}
       >
-        <svg className="w-8 h-8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M9 5l7 7-7 7" />
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
         </svg>
       </button>
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-gold font-semibold bg-surface/80 backdrop-blur-md px-6 py-2 rounded-full">
-        {currentIndex + 1} / {galleryImages.length}
+      {/* Counter */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 10000,
+          background: 'rgba(20,20,20,0.85)', backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(212,175,55,0.3)', borderRadius: '999px',
+          padding: '6px 20px', color: '#FFD700', fontWeight: 600, fontSize: '0.9rem',
+        }}
+      >
+        {currentIndex + 1} / {total}
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
+};
+
+const Gallery = () => {
+  const [selectedIndex, setSelectedIndex] = useState(null);
+
+  const openLightbox = (index) => setSelectedIndex(index);
+  const closeLightbox = () => setSelectedIndex(null);
+
+  const navigateImage = (direction) => {
+    setSelectedIndex((prev) =>
+      direction === 'next'
+        ? (prev + 1) % galleryImages.length
+        : (prev - 1 + galleryImages.length) % galleryImages.length
+    );
+  };
 
   return (
     <section id="gallery" className="min-h-screen py-20 px-4 overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        {/* Section Title */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -94,27 +142,21 @@ const Gallery = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-5xl md:text-6xl font-bold text-gold mb-4">
-            Gallery
-          </h2>
+          <h2 className="text-5xl md:text-6xl font-bold text-gold mb-4">Gallery</h2>
           <div className="w-24 h-1 bg-gold mx-auto mb-6"></div>
           <p className="text-text/80 text-lg max-w-2xl mx-auto">
-            Relive the moments from Torque 2025 - A celebration of innovation and engineering excellence
+            Relive the moments from Torque 2025 — A celebration of innovation and engineering excellence
           </p>
         </motion.div>
 
         {/* Horizontal Scrolling Gallery */}
-        <div
-          className="gallery-container"
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
-        >
+        <div className="gallery-container">
           <div className="gallery-track">
             {galleryImages.map((image, index) => (
               <motion.figure
                 key={index}
                 className="gallery-item"
-                onClick={() => openLightbox(image, index)}
+                onClick={() => openLightbox(index)}
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.3 }}
               >
@@ -130,7 +172,6 @@ const Gallery = () => {
           </div>
         </div>
 
-        {/* Keyboard Navigation Hint */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -138,15 +179,17 @@ const Gallery = () => {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="text-center text-text/60 text-sm mt-8"
         >
-          Click on any image to view in full screen • Use arrow keys to navigate
+          Click any image to view fullscreen · Arrow keys to navigate · Esc to close
         </motion.p>
       </div>
 
-      {/* Lightbox */}
       <AnimatePresence>
-        {selectedImage && (
+        {selectedIndex !== null && (
           <Lightbox
-            image={selectedImage}
+            key={selectedIndex}
+            image={galleryImages[selectedIndex]}
+            currentIndex={selectedIndex}
+            total={galleryImages.length}
             onClose={closeLightbox}
             onNext={() => navigateImage('next')}
             onPrev={() => navigateImage('prev')}
