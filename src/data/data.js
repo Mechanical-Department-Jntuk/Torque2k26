@@ -680,7 +680,7 @@ export const sponsors = [
     logo: '/images/sponsors/sponsor1.jpeg'
   },
   {
-    name: 'C7',
+    name: 'CLOUD7WORKS',
     logo: '/images/sponsors/sponsor2.jpeg'
   }
 ];
