@@ -248,20 +248,17 @@ export const events = [
         "content": [
           {
             "label": "Mode",
-            "value": "Offline at department"
+            "value": "Offline"
+          },
+           {
+            "label": "Venue",
+            "value": "Mechanical  Department"
           },
           {
-            "label": "Platform",
-            "value": "Lichess"
+            "label": "Time control ",
+            "value": "10 Minutes"
           },
-          {
-            "label": "Format",
-            "value": "Swiss tournament"
-          },
-          {
-            "label": "Rounds",
-            "value": "Seven rounds"
-          },
+         
     
         ]
       },
