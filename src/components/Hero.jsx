@@ -256,15 +256,9 @@ const Hero = ({ onRegister }) => {
             transition={{ delay: 2.0, duration: 0.6 }}
             className="mt-10"
           >
-            {festInfo.registrationOpen ? (
-              <button className="register-btn" onClick={onRegister}>
-                Register Now
-              </button>
-            ) : (
-              <button className="neu-button inline-block text-lg px-8 py-4" style={{ opacity: 0.6, cursor: 'not-allowed', color: '#ff4d4d', borderColor: '#ff4d4d' }} disabled>
-                Registration Closed
-              </button>
-            )}
+            <button className="register-btn" onClick={onRegister}>
+              Register Now
+            </button>
           </motion.div>
         </motion.div>
       </div>
